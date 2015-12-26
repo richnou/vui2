@@ -84,6 +84,20 @@ set vui [vui::core::set com.idyria.osi.vui.core.definitions {
 
             }
 
+            ## Events 
+            #############
+            :onMap scala {
+
+                puts "Component ON MAp scala"
+
+                :def onClick {cl/=>Any} : Unit = {
+                    throw new RuntimeException("Not Implemented")
+                } 
+                :def onClickFork {cl/=>Any} : Unit = {
+                    throw new RuntimeException("Not Implemented")
+                } 
+            }
+
         }
 
 

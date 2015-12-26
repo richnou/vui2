@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="VUI2">
+	<publishDate position="right" />
+
+	<skin>
+		<!-- <groupId>org.apache.maven.skins</groupId> -->
+		<!-- <artifactId>maven-fluido-skin</artifactId> -->
+		<!-- <version>1.4</version> -->
+
+		<groupId>lt.velykis.maven.skins</groupId>
+		<artifactId>reflow-maven-skin</artifactId>
+		<version>1.1.1</version>
+	</skin>
+
+	<custom>
+		<!-- <fluidoSkin> -->
+		<!-- <topBarEnabled>true</topBarEnabled> -->
+		<!-- <sideBarEnabled>true</sideBarEnabled> -->
+		<!-- <sourceLineNumbersEnabled>true</sourceLineNumbersEnabled> -->
+		<!-- <googleSearch> -->
+		<!-- <sitesearch>${project.url}</sitesearch> -->
+		<!-- </googleSearch> -->
+		<!-- <gitHub> -->
+		<!-- <projectId>richnou/vui2</projectId> -->
+		<!-- <ribbonOrientation>right</ribbonOrientation> -->
+		<!-- <ribbonColor>gray</ribbonColor> -->
+		<!-- </gitHub> -->
+		<!-- </fluidoSkin> -->
+		<reflowSkin>
+			<theme>bootswatch-spacelab</theme>
+			<highlightJs>true</highlightJs>
+			<bannerLeft>
+				<!-- Reflow Maven Skin, but with "Reflow" highlighted -->
+				<name><![CDATA[
+      <span class="color-highlight">Reflow</span> Maven Skin
+      ]]>
+				</name>
+				<href>http://andriusvelykis.github.io/reflow-maven-skin</href>
+			</bannerLeft>
+			<brand>
+				<name><![CDATA[
+    <span class="color-highlight">VUI2</span>
+    ]]></name>
+				<href>http://github.com/andriusvelykis/reflow-maven-skin</href>
+			</brand>
+			<absoluteResourceURL>http://localhost:8080/</absoluteResourceURL>
+			<!-- <slogan>Super interesting project doing good things.</slogan> -->
+			<titleTemplate>%2$s | %1$s</titleTemplate>
+			<toc>sidebar</toc>
+			<topNav>Main|reports|Main\/HTML</topNav>
+			<bottomNav>
+				<column>Main</column>
+				<column>none</column>
+				<column>none</column>
+			</bottomNav>
+			<bottomDescription>
+				VUI2 is an Abstract GUI programming library with
+				generic Mapping
+			</bottomDescription>
+			<pages>
+
+				<index project="project-id">
+					<shortTitle>Welcome</shortTitle>
+					<breadcrumbs>false</breadcrumbs>
+					<toc>false</toc>
+					<sections>
+						<carousel />
+						<body />
+						<sidebar />
+						<thumbs>2</thumbs>
+						<columns>3</columns>
+					</sections>
+				</index>
+				<html-html></html-html>
+				<developer-info>
+					<toc>sidebar</toc>
+				</developer-info>
+			</pages>
+		</reflowSkin>
+	</custom>
+	<body>
+		<links>
+			<item name="Introduction" href="index.html" />
+			<item name="HTML" href="html/html.html" />
+		</links>
+		
+		<menu name="Main" inherit="top">
+			<item name="Introduction" href="index.html" />
+			<item name="HTML" href="html/html.html" />
+		</menu>
+		
+		<menu ref="reports"></menu>
+
+		<!-- <menu ref="reports" inherit="bottom" /> -->
+
+		<!-- <menu ref="modules" /> -->
+
+	</body>
+</project>
