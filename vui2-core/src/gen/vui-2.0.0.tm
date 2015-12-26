@@ -16,7 +16,7 @@ package require odfi::files 2.0.0
 namespace eval vui::core {
 
 
-    odfi::language::Language2 default {
+    odfi::language::Language default {
 
         :WithProperties {
 

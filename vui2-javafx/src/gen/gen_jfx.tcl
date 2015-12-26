@@ -15,4 +15,5 @@ set jfxImpl [$vui implementation JavaFX JFX javafx.scene.Node {
 
 }]
 
-[$jfxImpl mapToScala] writeToSourceFolder ../../target/generated-sources/scala/
+set loc [file dirname [info script]]
+[$jfxImpl mapToScala] writeToSourceFolder $loc/../../target/generated-sources/scala/

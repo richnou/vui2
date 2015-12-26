@@ -130,4 +130,10 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
+	
+	<modules>
+		<module>vui2-core</module>
+		<module>vui2-html</module>
+		<module>vui2-javafx</module>
+	</modules>
 </project>

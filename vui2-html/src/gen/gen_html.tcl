@@ -475,5 +475,5 @@ $htmlScala apply {
 
 }
 ## EOF Interface package 
-
-$htmlScala writeToSourceFolder ../../target/generated-sources/scala/
+set loc [file dirname [info script]]
+$htmlScala writeToSourceFolder $loc/../../target/generated-sources/scala/

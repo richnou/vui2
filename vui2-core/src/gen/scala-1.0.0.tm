@@ -12,7 +12,7 @@ package require odfi::files 2.0.0
 ###############
 namespace eval scala {
 
-    odfi::language::Language2 default {
+    odfi::language::Language default {
 
 
 

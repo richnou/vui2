@@ -6,6 +6,6 @@ source $loc/vui_defs.tcl
 
 ## Map to Scala And Genereate 
 #####################################
-$vuiScala writeToSourceFolder ../../target/generated-sources/scala/
+$vuiScala writeToSourceFolder $loc/../../target/generated-sources/scala/
 
 #source gen_html.tcl
