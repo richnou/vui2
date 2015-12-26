@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="VUI2 JavaFX">
+	<publishDate position="right" />
+
+	<skin>
+		<!-- <groupId>org.apache.maven.skins</groupId> -->
+		<!-- <artifactId>maven-fluido-skin</artifactId> -->
+		<!-- <version>1.4</version> -->
+
+		<groupId>lt.velykis.maven.skins</groupId>
+		<artifactId>reflow-maven-skin</artifactId>
+		<version>1.1.1</version>
+	</skin>
+
+	<custom>
+<!-- 		<fluidoSkin> -->
+<!-- 			<topBarEnabled>true</topBarEnabled> -->
+<!-- 			<sideBarEnabled>true</sideBarEnabled> -->
+<!-- 			<sourceLineNumbersEnabled>true</sourceLineNumbersEnabled> -->
+<!-- 			<googleSearch> -->
+<!-- 				<sitesearch>${project.url}</sitesearch> -->
+<!-- 			</googleSearch> -->
+<!-- 			<gitHub> -->
+<!-- 				<projectId>richnou/vui2</projectId> -->
+<!-- 				<ribbonOrientation>right</ribbonOrientation> -->
+<!-- 				<ribbonColor>gray</ribbonColor> -->
+<!-- 			</gitHub> -->
+<!-- 		</fluidoSkin> -->
+		<reflowSkin>
+			<theme>bootswatch-spacelab</theme>
+			<highlightJs>true</highlightJs>
+			<brand>
+				<name>VUI2 Core</name>
+				<href>http://github.com/andriusvelykis/reflow-maven-skin</href>
+			</brand>
+<!-- 			<slogan>Super interesting project doing good things.</slogan> -->
+			<titleTemplate>%2$s | %1$s</titleTemplate>
+			<toc>sidebar</toc>
+			<topNav>Download|reports</topNav>
+			<topDescription>VUI2 Core contains the main Interfaces of the VUI2 Library</topDescription>
+			<bottomNav>
+				<column>Main|Download</column>
+				<column>Documentation</column>
+				<column>reports|modules</column>
+			</bottomNav>
+			<bottomDescription>
+				VUI2  is an Abstract GUI programming library with generic Mapping
+			</bottomDescription>
+			<pages>
+				<index project="project-id">
+					<shortTitle>Welcome</shortTitle>
+					<breadcrumbs>false</breadcrumbs>
+					<toc>false</toc>
+					<sections>
+						<carousel />
+						<body />
+						<sidebar />
+						<thumbs>2</thumbs>
+						<columns>3</columns>
+					</sections>
+				</index>
+				<developer-info>
+					<toc>sidebar</toc>
+				</developer-info>
+			</pages>
+		</reflowSkin>
+	</custom>
+	<body>
+		<menu name="Overview">
+			<item name="Introduction" href="inexex.html" />
+			<item name="Components Reference" href="components.html" />
+		</menu>
+
+		<menu ref="reports" inherit="bottom" />
+
+		<menu ref="modules" />
+
+	</body>
+</project>

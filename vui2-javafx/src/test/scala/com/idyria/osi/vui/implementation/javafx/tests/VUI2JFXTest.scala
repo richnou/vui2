@@ -4,6 +4,7 @@ import com.idyria.osi.vui.core.definitions.VUIBuilder
 import com.idyria.osi.vui.html.standlone.StandaloneHTMLViewCompiler
 import com.idyria.osi.vui.implementation.javafx.JavaFXRun
 import com.idyria.osi.vui.html.basic.BasicHTMLViewCompiler
+import javafx.scene.web.WebView
 
 object VUI2JFXTest extends App with VUIBuilder {
   
@@ -29,7 +30,8 @@ object VUI2JFXTest extends App with VUIBuilder {
   <body><h1>Test</h1></body>
 </html>
 """*/
-            br.view = view
+            //br.view = view
+            br.base.asInstanceOf[WebView].getEngine.load("http://www.edankwan.com/experiments/smashing-mega-scene/")
         }
     }
     
