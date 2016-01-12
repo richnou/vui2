@@ -42,7 +42,7 @@ $htmlScala apply {
             Script      {script  src/java.net.URL language}
 
             P           {p}
-            H1         {h1}
+            H1         {h1 textContent/String}
             H2         {h2}
             H3         {h3}
             H4         {h4}
@@ -58,6 +58,8 @@ $htmlScala apply {
 
         ## Fields 
         :constructorField nodeName : String 
+        
+        ## FIXME : Add text content as class field
 
         ## Add to VUI Component 
         :addTrait com.idyria.osi.vui.core.definitions.VUIComponent {
@@ -109,12 +111,17 @@ $htmlScala apply {
                 :parentConstructorField "nodeName" [lindex $elts 0]
 
                 ## Add Attributes as constructorField
+                ## If it is textContent , then add without var
                 foreach attr [lrange $elts 1 end] {
 
                     set type ""
                     ::extractVars [split $attr /] name type
                     :constructorField $name {
                         :type set [expr [string length $type]==0 ? "{String}" : "{$type}"]
+                        
+                        if {[:name get]== "textContent" } {
+                            :override set true
+                        }
                     }
                 }
 
@@ -348,7 +355,7 @@ $htmlScala apply {
             com.idyria.osi.vui.html.Body com.idyria.osi.vui.html.test.MyBody
         }
 
-        ## BASIC HTML Builder for non fully overriding interfaces
+        ## Standalone HTML Builder for non fully overriding interfaces
         #################
         :trait StandaloneBasicHTMLBuilderTrait {
 
@@ -464,6 +471,12 @@ $htmlScala apply {
                     :mapTypeParameter [$it name get]_NT $baseCompName\[BT,$baseCompName\[BT,_\]\]
                 }
                 
+            }
+		
+            ## Add events
+            #####################
+            :def onClick {cl/=>Unit} = {
+                currentNode.onClick{cl}
             }
 
         }
