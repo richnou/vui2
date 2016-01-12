@@ -79,7 +79,7 @@ set vui [vui::core::set com.idyria.osi.vui.core.definitions {
 
                 :component "Frame" {
                     :property title String "VUI Frame"
-                    
+                    :property size Tuple2\[Double,Double\] "(0,0)"
                 }
 
             }

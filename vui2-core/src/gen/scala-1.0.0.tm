@@ -29,7 +29,8 @@ namespace eval scala {
             ############
             :field name {
                 +var visibility public 
-                +var constructor false    
+                +var constructor false
+                +var override false
                 +var type  "String"     
                 +var default ""    
             }
@@ -476,7 +477,16 @@ namespace eval scala {
 
                     ## Local
                     set constructorFields [[:shade scala::Field children] filter {$it constructor get}]
-                    set constructorFields [[$constructorFields map {return "var [$it name get] : [$it type get] "}] ]
+                #
+                    set constructorFields [[$constructorFields map {
+                        if {[$it override get]==true} {
+                            return "[$it name get] : [$it type get] "
+                        } else {
+                            return "var [$it name get] : [$it type get] "
+                        }
+                        
+                        
+                    }] ]
 
                     ## From Parent 
                     set parentConstructorArgs ""
