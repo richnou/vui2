@@ -121,11 +121,13 @@ $htmlScala apply {
                         
                         if {[:name get]== "textContent" } {
                             :override set true
+                            :name set __textContent
                         }
                     }
                 }
 
                 #### Arguments from constructor are used as attributes 
+                #### textContent just sets textContent
                 if {[$argNames size]>0} {
                     #set initCode [odfi::richstream::template::stringToString ]
                     
@@ -133,7 +135,12 @@ $htmlScala apply {
                         // Attributes
                         <% 
                             return [[$argNames map {
-                                return "this(\"$it\" -> $it)"
+                                if {$it== "textContent" } {
+                                    return "this.textContent = __textContent"
+                                } else {
+                                    return "this(\"$it\" -> $it)"
+                                }
+                                
                             }] mkString "\\n"]
                         %>
                     }
