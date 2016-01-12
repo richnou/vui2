@@ -24,9 +24,9 @@ class TryHTMLView extends BasicHTMLView with StandaloneBasicHTMLBuilderTrait[HTM
       body {
         currentNode.textContent ="TEst 2 "
         
-        h1 {
-          currentNode.textContent = "Hello"
-        }
+        /*h1 {
+         // currentNode.textContent = "Hello"
+        }*/
         
         a("#") {
           currentNode.textContent = "Button test"

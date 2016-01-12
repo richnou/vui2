@@ -12,7 +12,7 @@ import com.idyria.osi.vui.implementation.javafx.factories.JFXFinalFactory
 
 class JavaFXRun extends Application {
 
-    var cl: () ⇒ Unit = { () ⇒ }
+    var cl: () => Unit = { () => }
 
     def start(stage: Stage) = {
         stage.close()
@@ -38,10 +38,10 @@ object JavaFXRun {
     VUIFactory.setImplementationForCurrentThread(new JFXFinalFactory)
     VUIFactory.defaultImplementation = Some(new JFXFinalFactory)
 
-    def onJavaFX[T](cl: ⇒ T): Option[T] = {
+    def onJavaFX[T](cl: => T): Option[T] = {
 
         started match {
-            case true ⇒
+            case true =>
 
                 var r: Option[T] = None
                 Platform.runLater(new Runnable() {
@@ -54,7 +54,7 @@ object JavaFXRun {
                 r
 
             // No grants in semaphore, start application
-            case false ⇒
+            case false =>
 
                 /*applicationThread = Some(new Thread(new Runnable() {
           def run = {
@@ -98,7 +98,7 @@ object JavaFXRun {
     //----------
     //var d = new DummyApplication
     applicationThread match {
-      case Some(appThread) ⇒
+      case Some(appThread) =>
 
        
         
@@ -111,7 +111,7 @@ object JavaFXRun {
         })
 
       // No grants in semaphore, start application
-      case None ⇒
+      case None =>
 
         /*applicationThread = Some(new Thread(new Runnable() {
           def run = {

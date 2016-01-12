@@ -23,12 +23,10 @@ trait JFXFrameFactory extends com.idyria.osi.vui.core.definitions.VUIFrameFactor
 
   // Methods
   //------------------
-  override def createFrame: com.idyria.osi.vui.core.definitions.VUIFrame[Node,VUIFrame[Node,_]] = {
+  override def createFrame: com.idyria.osi.vui.core.definitions.VUIFrame[Node, VUIFrame[Node, _]] = {
 
-    new Stage() with VUIFrame[Stage,VUIFrame[Stage,_]] {
-      
-    
-        
+    new Stage() with VUIFrame[Stage, VUIFrame[Stage, _]] {
+
       // Init
       //---------------
 
@@ -47,26 +45,25 @@ trait JFXFrameFactory extends com.idyria.osi.vui.core.definitions.VUIFrameFactor
       this.onMatch("child.added") {
 
         // Adding A group in the scene replaces the top group
-        /*case g: VUISGNode[_,_] ⇒
+        /*case g: VUISGNode[_,_] =>
 
           println("Adding Group: " + g.base)
           
           this.getScene().setRoot(g.base.asInstanceOf[javafx.scene.Parent])*/
 
         // Adding nodes only addes to the top node
-        case n: VUISGNode[_,_] ⇒
+        case n: VUISGNode[_, _] =>
 
-          
           // Create Pane to welcome new node 
           n.base match {
-          case node : Pane => this.getScene().setRoot(node)
-          case node => 
-            println(s"Adding simple node")
-            var p = new StackPane
-            this.getScene().setRoot(p)
-            p.getChildren.add(n.base.asInstanceOf[Node])
-        }
-         // this.getScene().getRoot().asInstanceOf[Group].getChildren().add()
+            case node: Pane => this.getScene().setRoot(node)
+            case node =>
+              println(s"Adding simple node")
+              var p = new StackPane
+              this.getScene().setRoot(p)
+              p.getChildren.add(n.base.asInstanceOf[Node])
+          }
+        // this.getScene().getRoot().asInstanceOf[Group].getChildren().add()
 
       }
 
@@ -76,10 +73,10 @@ trait JFXFrameFactory extends com.idyria.osi.vui.core.definitions.VUIFrameFactor
       override def clear: Unit = {
 
         this.sceneProperty().get() match {
-          case null ⇒
-          case scene ⇒ scene.getRoot() match {
-            case g: Group ⇒ g.getChildren().clear()
-            case _ ⇒
+          case null =>
+          case scene => scene.getRoot() match {
+            case g: Group => g.getChildren().clear()
+            case _ =>
           }
         }
 
@@ -119,9 +116,11 @@ trait JFXFrameFactory extends com.idyria.osi.vui.core.definitions.VUIFrameFactor
       def height(height: Int): Unit = this.base.setHeight(height)
       def width(width: Int): Unit = this.base.setWidth(width)
 
-      def size(width: Int, height: Int): Unit = {
-        this.base.setHeight(height)
-        this.base.setWidth(width)
+      override def size_=(v: Tuple2[Double, Double]) = {
+        super.size_=(v)
+        this.base.setHeight(v._2)
+        this.base.setWidth(v._1)
+
       }
 
       override def title_=(title: String): Unit = {
@@ -137,14 +136,14 @@ trait JFXFrameFactory extends com.idyria.osi.vui.core.definitions.VUIFrameFactor
       /*override def show() = {
           onUIThread(super.show())
       }*/
-      
-      override def visible_=(v: Boolean) =  {
+
+      override def visible_=(v: Boolean) = {
         super.visible = (v)
         v match {
           case true => this.base.show()
           case false => this.base.close()
         }
-        
+
       }
 
       // Events
@@ -153,7 +152,7 @@ trait JFXFrameFactory extends com.idyria.osi.vui.core.definitions.VUIFrameFactor
       /**
        * When the Window gets closed
        */
-       def onClose(cl: => Unit) = {
+      def onClose(cl: => Unit) = {
 
         this.setOnCloseRequest(new EventHandler[WindowEvent] {
           def handle(e: WindowEvent) = {
@@ -164,8 +163,8 @@ trait JFXFrameFactory extends com.idyria.osi.vui.core.definitions.VUIFrameFactor
 
       }
 
-    }.asInstanceOf[VUIFrame[Node,VUIFrame[Node,_]]]
-    
+    }.asInstanceOf[VUIFrame[Node, VUIFrame[Node, _]]]
+
   }
 
   // Imported Content 
