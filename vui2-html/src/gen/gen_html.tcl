@@ -42,12 +42,12 @@ $htmlScala apply {
             Script      {script  src/java.net.URL language}
 
             P           {p}
-            H1         {h1 textContent/String}
-            H2         {h2}
-            H3         {h3}
-            H4         {h4}
-            H5         {h5}
-            H6         {h6}
+            H1          {h1 textContent/String}
+            H2          {h2 textContent/String}
+            H3          {h3 textContent/String}
+            H4          {h4 textContent/String}
+            H5          {h5 textContent/String}
+            H6          {h6 textContent/String}
 
         }
 
