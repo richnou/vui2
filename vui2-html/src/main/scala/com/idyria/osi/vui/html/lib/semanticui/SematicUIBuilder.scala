@@ -6,6 +6,10 @@ import java.net.URL
 
 trait SemanticUIBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
+  // Config
+  //---------------
+  var semanticUIVersion = "2.1.4"
+  
   // Module usage
   //----------------------
 
@@ -15,17 +19,17 @@ trait SemanticUIBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     super.html {
 
       head {
-        script(new URL("https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"), "text/javascript") {
+        script(new URL("https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")) {
 
         }
 
-        script(getClass.getClassLoader.getResource("semantic/dist/semantic.min.js"), "text/javascript") {
+        /*script(getClass.getClassLoader.getResource("semantic/dist/semantic.min.js"), "text/javascript") {
 
         }
 
         stylesheet(getClass.getClassLoader.getResource("semantic/dist/semantic.min.css")) {
 
-        }
+        }*/
       }
 
       cl

@@ -32,6 +32,17 @@
 						</configuration>
 					</execution>
 					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.build.directory}/generated-sources/scala</source>
+							</sources>
+						</configuration>
+					</execution>
+					<execution>
 						<phase>pre-site</phase>
 						<goals>
 							<goal>add-source</goal>

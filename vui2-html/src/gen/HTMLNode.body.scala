@@ -72,7 +72,7 @@
    * Clear Children
    */
   /* def clear: Unit = {
-    this.childrenSeq = this.childrenSeq.filter(_ ⇒ true)
+    this.childrenSeq = this.childrenSeq.filter(_ => true)
   }*/
 
   /**
@@ -80,8 +80,8 @@
    */
   /*override def removeChild(n: SGNode[Any]) = {
     this.children.contains(n) match {
-      case true  ⇒ this.childrenSeq = this.children diff Seq(n)
-      case false ⇒
+      case true  => this.childrenSeq = this.children diff Seq(n)
+      case false =>
     }
   }*/
 
@@ -117,14 +117,14 @@
   def waitFor(id: String) = {
 
     this.onWith(id) {
-      content: Any ⇒
+      content: Any =>
 
       // println("*** Adding content: "+id+" of type: "+content.getClass)
 
       /* content match {
-          case node: VUISGNode[_,_] ⇒ this <= node.asInstanceOf[VUISGNode[HT,_]]
-          case nodes if (nodes.isInstanceOf[Iterable[_]]) ⇒ nodes.asInstanceOf[Iterable[_]].foreach { n => this <= n.asInstanceOf[VUISGNode[HT,_]] }
-          case _ ⇒
+          case node: VUISGNode[_,_] => this <= node.asInstanceOf[VUISGNode[HT,_]]
+          case nodes if (nodes.isInstanceOf[Iterable[_]]) => nodes.asInstanceOf[Iterable[_]].foreach { n => this <= n.asInstanceOf[VUISGNode[HT,_]] }
+          case _ =>
         }*/
     }
 
@@ -180,6 +180,12 @@
 
     this.attributes = attributes + attr
   }
+  
+  def ++@(attr: (String, Any)) = {
+
+     attributeAppend((attr._1,attr._2.toString))
+  }
+  
   def attributeAppend(attr: (String, String)) = {
 
     this.attributes.get(attr._1) match {
@@ -192,6 +198,22 @@
         this.attributes = attributes + (attr._1 -> s"$actualValue ${attr._2}")
     }
 
+  }
+  
+  def attribute(name:String) = {
+  	this.attributes.get(name) match {
+      case None =>
+
+        ""
+
+      case Some(actualValue) =>
+
+        actualValue.toString
+    }
+  }
+  
+  def attributeOption(name:String) = {
+  	this.attributes.get(name)
   }
 
   /**
@@ -237,11 +259,11 @@
 
     // Prepare attributes
     //-------------------------
-    var attrs = attributes.size match { case 0 ⇒ "" case _ ⇒ attributes.map { t ⇒ s"""${t._1}="${t._2}" """.trim }.mkString(" ", " ", "") }
+    var attrs = attributes.size match { case 0 => "" case _ => attributes.map { t => s"""${t._1}="${t._2}" """.trim }.mkString(" ", " ", "") }
 
     var indentString = this.indentCount match {
       case 0 => List("")
-      case indentCount => for (i ← 1 to indentCount) yield "    "
+      case indentCount => for (i <- 1 to indentCount) yield "    "
     }
 
     s"""
@@ -260,4 +282,9 @@ ${indentString.mkString}</$nodeName>
 
   def onLoad(cl: Any => Any): Unit = {
 
+  }
+  
+  // Content Update API
+  //--------------------
+  def updateContent = {
   }

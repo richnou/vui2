@@ -14,6 +14,10 @@ def registerClosure(cl: Any => Any) = {
 
   id
 }
+def getClosure(code:String) : Option[Any => Any] = {
+  
+  this.actions.get(code)
+}
 
 def call(code: String, param: AnyRef) = {
 

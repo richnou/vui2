@@ -140,8 +140,8 @@ trait JFXFrameFactory extends com.idyria.osi.vui.core.definitions.VUIFrameFactor
       override def visible_=(v: Boolean) = {
         super.visible = (v)
         v match {
-          case true => this.base.show()
-          case false => this.base.close()
+          case true => onUIThread(this.base.show())
+          case false =>onUIThread( this.base.close())
         }
 
       }

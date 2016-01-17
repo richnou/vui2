@@ -122,7 +122,6 @@
 								</jvmArgs>
 							</configuration>
 						</plugin>
-						...
 					</reportPlugins>
 				</configuration>
 			</plugin>

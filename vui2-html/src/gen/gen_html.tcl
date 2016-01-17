@@ -39,8 +39,9 @@ $htmlScala apply {
             Html        html 
             Stylesheet  {link  href/java.net.URL}
             A           {a href}
-            Script      {script  src/java.net.URL language}
-
+            Script      {script  src/java.net.URL}
+            I           i
+        
             P           {p}
             H1          {h1 textContent/String}
             H2          {h2 textContent/String}
@@ -48,6 +49,19 @@ $htmlScala apply {
             H4          {h4 textContent/String}
             H5          {h5 textContent/String}
             H6          {h6 textContent/String}
+        
+            Table       table
+            Tbody       tbody
+            Thead       thead
+            Th          {th textContent/String}
+            Tr          tr
+            Td          {td textContent/String}
+            Tfoot       tfoot 
+        
+            Label       label
+            Input       input
+        
+            Wrapper     {wrapper textContent/String}
 
         }
 
@@ -478,6 +492,28 @@ $htmlScala apply {
                     :mapTypeParameter [$it name get]_NT $baseCompName\[BT,$baseCompName\[BT,_\]\]
                 }
                 
+            }
+            
+            #############################
+            ## Utility Builders
+            #############################
+            
+            ## CSS Classes
+            :def classes {classes/String*} = {
+               classes.foreach(currentNode.++@("class",_))
+            }
+            ## Generic Attribute
+            :def ++@ {attr/(String,String)} = {
+              currentNode.++@(attr)
+            }
+            
+            :def id {idStr/String} = {
+                currentNode.+@("id"->idStr)
+            }
+            
+            ## Text Content
+            :def textContent {textContent/String} = {
+                currentNode.textContent=textContent
             }
 		
             ## Add events

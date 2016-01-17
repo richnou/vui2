@@ -7,12 +7,14 @@ import javafx.scene.Node
 import javafx.scene.web.WebEngine
 import javafx.scene.web.WebErrorEvent
 import javafx.scene.web.WebView
-
 import com.idyria.osi.vui.core.definitions.VUIWebBrowser
 import com.idyria.osi.vui.core.view.AView
 import com.idyria.osi.vui.html.standalone.StandaloneHtml
 import com.idyria.osi.vui.implementation.javafx.JavaFXNodeDelegate
 import com.idyria.osi.vui.implementation.javafx.JavaFXUtilsTrait
+import com.idyria.osi.tea.io.TeaIOPipe
+import com.idyria.osi.tea.io.TeaIOUtils
+import java.io.File
 
 trait JSEngineReference {
   var engine: Option[WebEngine] = None
@@ -108,6 +110,7 @@ window.onerror= function(message,script,line,column,errObj) {
                   //document.setMember("base", targetView.renderedNode.get)
                   targetView.renderedNode.get match {
                     case html : StandaloneHtml[_,_] => 
+                      html.engine = Some(base.getEngine)
                     case _ => 
                   }
                  // targetView.renderedNode.get.asInstanceOf[JSEngineReference].engine = Some(base.getEngine)
@@ -135,7 +138,9 @@ window.onerror= function(message,script,line,column,errObj) {
 }
 
 ;""");
-              //  window.eval("vuiInit.notify();")
+               //window.eval("vuiInit.notify();")
+                 base.getEngine.executeScript("vuiStart();");
+             //  window.eval("vuiStart();");
               }
               // var window = base.getEngine.executeScript("window").asInstanceOf[netscape.javascript.JSObject]
 
@@ -165,7 +170,7 @@ window.onerror= function(message,script,line,column,errObj) {
         var htmlString = html.toString()
         println(s"Rendered HTML node (" + hashCode() + "): " + html.hashCode() + "//" + targetView.renderedNode.get.hashCode())
         println(s"HTML: $htmlString")
-        /* var window = base.getEngine.executeScript("window").asInstanceOf[netscape.javascript.JSObject]
+         var window = base.getEngine.executeScript("window").asInstanceOf[netscape.javascript.JSObject]
         // window.setMember("base", html)
 
         window.setMember("bridge", lc);
@@ -190,18 +195,20 @@ window.onerror= function(message,script,line,column,errObj) {
           return true
 }
 
-;""");*/
+;""");
 
         base.getEngine.setJavaScriptEnabled(true)
 
         base.getEngine.loadContent(htmlString)
+        
+        TeaIOUtils.writeToFile(new File("debug.html"),htmlString)
 
         // Listen to view change to be able to reload content
         v.onWith("view.replace") {
           v: AView[_,_] =>
             println(s"!!Replacing VIEW!!")
             targetView = v
-            var nhtml = v.render
+            var nhtml = v.rerender
             var htmlString = nhtml.toString()
 
             onUIThread {
