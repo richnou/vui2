@@ -80,7 +80,7 @@ namespace eval scala {
             ## Init Code 
             ###################
             :initSection body {
-                +method init args {
+                +builder {
                     
                     set :body [odfi::richstream::template::stringToString ${:body}]
 
