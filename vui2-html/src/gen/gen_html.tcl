@@ -40,6 +40,7 @@ $htmlScala apply {
             Stylesheet  {link  href/java.net.URL}
             A           {a href}
             Script      {script  src/java.net.URL}
+            JavaScript  {script  textContent/String}
             I           i
         
             P           {p}
@@ -58,10 +59,16 @@ $htmlScala apply {
             Td          {td textContent/String}
             Tfoot       tfoot 
         
-            Label       label
+            Label       {label textContent/String}
+            
+            Form        form
             Input       input
+            Select      select
+            Option      {option value/String}
         
             Wrapper     {wrapper textContent/String}
+            
+            
 
         }
 
@@ -253,15 +260,15 @@ $htmlScala apply {
 
         ## Our Components
         ########################
-        :trait "StandaloneHTMLNode" {
-            :addTypeParameter "BT <: org.w3c.dom.html.HTMLElement"
+        #:trait "StandaloneHTMLNode" {
+        #    :addTypeParameter "BT <: org.w3c.dom.html.HTMLElement"
                 :mapTypeParameter "BT" "BT"
-            :addTrait com.idyria.osi.vui.html.HTMLNode {
-                :addTypeParameter BT 
-                :setFBounded
-            }
-
-        }
+        #    :addTrait com.idyria.osi.vui.html.HTMLNode {
+        #        :addTypeParameter BT 
+        #        :setFBounded
+        #    }
+#
+ #       }
 
 
         foreach {comp elts} $HTMLElements {
@@ -502,10 +509,16 @@ $htmlScala apply {
             :def classes {classes/String*} = {
                classes.foreach(currentNode.++@("class",_))
             }
+            
             ## Generic Attribute
             :def ++@ {attr/(String,String)} = {
               currentNode.++@(attr)
             }
+            
+            ## Generic Attribute
+            :def +@ {attr/(String,String)} = {
+                currentNode.+@(attr)
+            }            
             
             :def id {idStr/String} = {
                 currentNode.+@("id"->idStr)
