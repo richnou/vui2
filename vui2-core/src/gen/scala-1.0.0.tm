@@ -18,7 +18,11 @@ namespace eval scala {
 
 
         :type name {
-
+        
+            ## Gen Options
+            #######
+            +var noGenerate false
+        
             ## Config 
             ##############
             +var abstract   false
@@ -326,6 +330,11 @@ namespace eval scala {
             ############################
 
             +method writeToSourceFolder folder {
+                    
+                    if {[:noGenerate get]==true} {
+                        return
+                    }
+
 
                     ## Target File 
                     set targetFile $folder/[:name get].scala 
