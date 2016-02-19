@@ -1,3 +1,27 @@
+
+
+package com.idyria.osi.vui.html
+ 
+ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement,+Self]( var nodeName : String  ) extends com.idyria.osi.vui.core.definitions.VUIComponent[HT,Self]  {
+
+    this:Self => 
+
+
+    // Class Fields 
+    //---------------------
+    
+
+    // Init Section 
+    //----------------------
+    
+
+    // Methods
+    //------------------
+    
+
+    // Imported Content 
+    //----------------------
+    // Imported from E:/Common/Projects/git/vui2/vui2-html/src/gen/HTMLNode.body.scala
  // DOM Base
   //--------------------
   var delegate: HT = _
@@ -301,3 +325,9 @@ ${indentString.mkString}</$nodeName>
   //--------------------
   def updateContent = {
   }
+
+
+}
+
+
+                    

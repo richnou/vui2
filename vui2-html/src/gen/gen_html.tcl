@@ -37,6 +37,7 @@ $htmlScala apply {
             Body        body 
             Head        head 
             Html        html 
+            Image       {image    src/java.net.URL}            
             Stylesheet  {link  href/java.net.URL}
             A           {a href}
             Script      {script  src/java.net.URL}
@@ -76,7 +77,8 @@ $htmlScala apply {
     #######################
     :class HTMLNode {
         :setFBounded
-
+        :noGenerate set true
+        
         ## Fields 
         :constructorField nodeName : String 
         
@@ -126,11 +128,17 @@ $htmlScala apply {
             foreach argDef  [lrange $elts 1 end] {
                 $argNames += [lindex [split $argDef /] 0]
             }
-
+            
+            #puts "Creating class $comp"
             :class $comp {
                 :setFBounded
                 :parentConstructorField "nodeName" [lindex $elts 0]
-
+                
+            
+                
+                ## Add to package
+                [[:parent] parent] addChild [current object]
+                                
                 ## Add Attributes as constructorField
                 ## If it is textContent , then add without var
                 foreach attr [lrange $elts 1 end] {
@@ -262,7 +270,7 @@ $htmlScala apply {
         ########################
         #:trait "StandaloneHTMLNode" {
         #    :addTypeParameter "BT <: org.w3c.dom.html.HTMLElement"
-                :mapTypeParameter "BT" "BT"
+         #       :mapTypeParameter "BT" "BT"
         #    :addTrait com.idyria.osi.vui.html.HTMLNode {
         #        :addTypeParameter BT 
         #        :setFBounded
@@ -278,6 +286,11 @@ $htmlScala apply {
                 :addTypeParameter "BT <: org.w3c.dom.html.HTMLElement"
                 :mapTypeParameter "BT" "BT"
                 :setFBounded
+                
+                ## Ignore Html
+                if {$comp=="Html"} {
+                    :noGenerate set true
+                }                
 
                 ##### Main Component is parent class (reconstruct it to ease programming)
                 :setParentClass com.idyria.osi.vui.html.$comp {

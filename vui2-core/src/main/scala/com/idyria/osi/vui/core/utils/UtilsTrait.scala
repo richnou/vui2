@@ -17,6 +17,7 @@ trait UtilsTrait {
    * 
    * Should be overriden by implementors
    */
-  def onUIThread(cl: => Unit) 
+  def onUIThread(cl: => Any) : Unit
+  def onUIThreadBlocking(cl: => Any) : Any 
   
 }

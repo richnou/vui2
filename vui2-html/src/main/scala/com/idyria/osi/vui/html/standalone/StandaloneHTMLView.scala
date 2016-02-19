@@ -1,4 +1,4 @@
-package com.idyria.osi.vui.html.standlone
+package com.idyria.osi.vui.html.standalone
 
 
 import java.io.File

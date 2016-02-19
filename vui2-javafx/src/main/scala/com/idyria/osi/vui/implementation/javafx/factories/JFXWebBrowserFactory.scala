@@ -15,6 +15,7 @@ import com.idyria.osi.vui.implementation.javafx.JavaFXUtilsTrait
 import com.idyria.osi.tea.io.TeaIOPipe
 import com.idyria.osi.tea.io.TeaIOUtils
 import java.io.File
+import com.idyria.osi.vui.html.js.JSEngine
 
 trait JSEngineReference {
   var engine: Option[WebEngine] = None
@@ -54,18 +55,7 @@ trait JFXWebBrowserFactory extends com.idyria.osi.vui.core.definitions.VUIWebBro
 
       // load Monitor
       //----------------------------
-      /*this.base.getEngine.documentProperty().addListener(new javafx.beans.value.ChangeListener[org.w3c.dom.Document] {
-        def changed(ov: javafx.beans.value.ObservableValue[_ <: org.w3c.dom.Document], oldState: org.w3c.dom.Document, newState: org.w3c.dom.Document) = {
-
-          onUIThread {
-                var window = base.getEngine.executeScript("window").asInstanceOf[netscape.javascript.JSObject]
-              window.setMember("bridge", lc);
-              window.setMember("base", targetView.renderedNode.get)
-              window.setMember("base", targetView.renderedNode.get)
-              window.setMember("base", targetView.renderedNode.get)
-              window.setMember("base", targetView.renderedNode.get)
-              targetView.renderedNode.get.asInstanceOf[JSEngineReference].engine = Some(base.getEngine)
-              base.getEngine.executeScript("""
+      var ioRedirectScript = """
 console.log = function(message) {
            bridge.log(message);
 }
@@ -86,13 +76,7 @@ window.onerror= function(message,script,line,column,errObj) {
           return true
 }
 
-;""");
-              window.eval("vuiInit.resolve();")
-              }
-
-        }
-      })*/
-
+;"""
       this.base.getEngine.getLoadWorker().stateProperty().addListener(
         new javafx.beans.value.ChangeListener[javafx.concurrent.Worker.State] {
           def changed(ov: javafx.beans.value.ObservableValue[_ <: javafx.concurrent.Worker.State], oldState: javafx.concurrent.Worker.State, newState: javafx.concurrent.Worker.State) = {
@@ -101,46 +85,44 @@ window.onerror= function(message,script,line,column,errObj) {
               println("Done LAODING")
               //Thread.sleep(500)
               onUIThread {
+               
                 var window = base.getEngine.executeScript("window").asInstanceOf[netscape.javascript.JSObject]
                 var document = base.getEngine.executeScript("document").asInstanceOf[netscape.javascript.JSObject]
-                window.setMember("bridge", lc);
+                
+                //window.setMember("bridge", lc);
 
                 if (targetView != null && targetView.renderedNode != None) {
                   window.setMember("base", targetView.renderedNode.get)
                   //document.setMember("base", targetView.renderedNode.get)
                   targetView.renderedNode.get match {
                     case html : StandaloneHtml[_,_] => 
-                      html.engine = Some(base.getEngine)
+                      html.engine = Some(new JSEngine {
+                        def executeScript(str:String) : Any = {
+                          onUIThreadBlocking(base.getEngine.executeScript(str))
+                          
+                        }
+                      })
                     case _ => 
                   }
                  // targetView.renderedNode.get.asInstanceOf[JSEngineReference].engine = Some(base.getEngine)
                 }
 
-                base.getEngine.executeScript("""
-console.log = function(message) {
-           bridge.log(message);
-}
-console.info = function(message) {
-           bridge.log(message);
-}
-console.error = function(message) {
-           bridge.error(message.toString);
-}
-console.exception = function(message) {
-           bridge.error(message.toString);
-}
-console.warn = function(message) {
-           bridge.log(message);
-}
-window.onerror= function(message,script,line,column,errObj) {
-          bridge.reportError(message,script,line,column,errObj);
-          return true
-}
-
-;""");
-               //window.eval("vuiInit.notify();")
+               // base.getEngine.executeScript(ioRedirectScript);
+                 base.getEngine.executeScript("""
+window.requestAnimFrame = (function(){
+    return  window.requestAnimationFrame   || 
+        window.webkitRequestAnimationFrame || 
+        window.mozRequestAnimationFrame    || 
+        window.oRequestAnimationFrame      || 
+        window.msRequestAnimationFrame     || 
+        function(/* function */ callback, /* DOMElement */ element){
+             window.setTimeout(callback, 1000 / 60);
+        };
+})();
+""")
                  base.getEngine.executeScript("vuiStart();");
-             //  window.eval("vuiStart();");
+                 
+            
               }
               // var window = base.getEngine.executeScript("window").asInstanceOf[netscape.javascript.JSObject]
 
@@ -150,7 +132,16 @@ window.onerror= function(message,script,line,column,errObj) {
 
       // I/O redirection
       //-------------------
-
+      var window = base.getEngine.executeScript("window").asInstanceOf[netscape.javascript.JSObject].setMember("bridge", lc);
+      base.getEngine.executeScript(ioRedirectScript);
+      base.getEngine.impl_getDebugger().setEnabled(true)
+      base.getEngine.impl_getDebugger().setMessageCallback(new javafx.util.Callback[String,Void] {
+        def call(s:String) : Void = {
+          
+          println(s"Debug callback: $s").asInstanceOf[Void]
+        }
+      })
+      
       // Loading/Reloading
       //------------------------
       def loadContent(str: String) = {
@@ -161,7 +152,7 @@ window.onerror= function(message,script,line,column,errObj) {
         base.getEngine.load(str)
       }
 
-      override def view_=(v: AView[_,_]) = {
+      override def view_=(v: AView[_,_]) = onUIThread {
         targetView = v
 
         // Add Content

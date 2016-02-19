@@ -1,21 +1,41 @@
 
-import org.w3c.dom.html.HTMLElement
 
-/**
- * Bind the execution of the Closure to a call through embedded JS
- */
-override def onClick(cl: => Any) = {
+package com.idyria.osi.vui.html.standalone
 
-  var clid = this.getRootParent.asInstanceOf[StandaloneHtml[BT, _]].registerClosure {
-    _ => cl
-    //
+
+trait StandaloneHTMLNode[BT <: org.w3c.dom.html.HTMLElement, +Self] extends com.idyria.osi.vui.html.HTMLNode[BT, Self] {
+
+  this: Self =>
+
+  // Class Fields 
+  //---------------------
+
+  // Init Section 
+  //----------------------
+
+  // Methods
+  //------------------
+
+  // Imported Content 
+  //----------------------
+  // Imported from E:/Common/Projects/git/vui2/vui2-html/src/gen/StandaloneHTMLNode.body.scala
+
+  import org.w3c.dom.html.HTMLElement
+
+  /**
+   * Bind the execution of the Closure to a call through embedded JS
+   */
+  override def onClick(cl: => Any) = {
+
+    var clid = this.getRootParent.asInstanceOf[StandaloneHtml[BT, _]].registerClosure {
+      _ => cl
+      //
+    }
+    this("onclick" -> s"base.call('$clid',this)")
+
   }
-  this("onclick" -> s"base.call('$clid',this)")
 
-}
-
-
-override def doClick = {
+  override def doClick = {
 
     this.attributes.get("onclick") match {
       case Some(value) =>
@@ -25,46 +45,41 @@ override def doClick = {
         base.engine match {
           case Some(jsengine) =>
             jsengine.executeScript(value.toString())
-          case None => 
+          case None =>
         }
 
       case None =>
     }
   }
 
+  /**
+   *
+   */
+  override def updateContent = {
 
-/**
- *
- */
-override def updateContent = {
+    //-- Get VUI Content closure binding
+    var clId = this.attribute("vui-content") match {
+      case "" => sys.error(s"Cannot Update Content on Standalone Element with no vui-content attribute: ${getClass.getSimpleName}")
+      case clId => clId.toString
+    }
 
-  //-- Get VUI Content closure binding
-  var clId = this.attribute("vui-content") match {
-    case "" => sys.error(s"Cannot Update Content on Standalone Element with no vui-content attribute: ${getClass.getSimpleName}")
-    case clId => clId.toString
-  }
+    //-- Get Base
+    var base = this.getRootParent.asInstanceOf[StandaloneHtml[HTMLElement, _]]
 
-  //-- Get Base
-  var base = this.getRootParent.asInstanceOf[StandaloneHtml[HTMLElement, _]]
-
-  //-- Get Closure
-  base.getClosure(clId) match {
-    case None =>
-    case Some(cl) =>
-      //-- Get ID 
+    //-- Get Closure
+    base.getClosure(clId) match {
+      case None =>
+      case Some(cl) =>
+        //-- Get ID 
         var id = this.attributes("id").toString()
-        
+
         //-- Get DOM (content definition forces bind)
         var dom = this.delegate
-        
+
         //-- Empty Current node, from now on it is new and run closure
         this.clear
         cl(null)
         //println(s"Content Regenerated on Scala Side")
-
-       
-        
-        
 
         //-- Now Replace using JQuery
         var newHTML = this.toString()
@@ -123,10 +138,15 @@ $$.each( res, function( i, el ) {
 
             // Execute the Scripts
             engine.executeScript("vuiUpdatedContent();");
-           
-      }
+
+        }
+    }
+
+    //var contentNode
+
   }
 
-  //var contentNode
-
 }
+
+
+                    

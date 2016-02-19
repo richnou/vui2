@@ -1,3 +1,5 @@
+console.info("In VUI Standalone")
+
 var vuiInit = jQuery.Deferred();
 
 function vuiStart () {
@@ -5,10 +7,12 @@ function vuiStart () {
 	vuiInit.notify();
 	
 }
-vuiInit.progress(function() {
 
-  
-  console.info("Trying to bind ");
+function vuiUpdatedContent() {
+	vuiBind();
+}
+function vuiBind() {
+	
   $("[vui-bind]").each(function(index,elt) {
       console.info("Binding "+elt+" to "+$(elt).attr('vui-bind'));
       
@@ -16,5 +20,16 @@ vuiInit.progress(function() {
 
       $(elt).removeAttr('vui-bind');
   });
+	
+}
+
+// Init Sequence
+//--------------
+vuiInit.progress(function() {
+
+  
+  console.info("Trying to bind ");
+  vuiBind();
+  
 
 });

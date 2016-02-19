@@ -4,8 +4,9 @@ import com.idyria.osi.vui.core.definitions.VUIBuilder
 import com.idyria.osi.vui.core.definitions.VUIFrame
 import com.idyria.osi.vui.implementation.javafx.JavaFXRun
 import com.idyria.osi.vui.html.basic.BasicHTMLView
+import com.idyria.osi.vui.implementation.javafx.JavaFXUtilsTrait
 
-trait JFXWebUtil extends VUIBuilder {
+trait JFXWebUtil extends VUIBuilder with JavaFXUtilsTrait {
   
   
   def createBrowserUI  = {

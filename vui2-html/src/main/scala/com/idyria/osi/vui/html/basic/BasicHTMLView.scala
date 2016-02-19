@@ -4,7 +4,6 @@ package com.idyria.osi.vui.html.basic
 import java.io.File
 import com.idyria.osi.vui.core.view.AViewCompiler
 import com.idyria.osi.vui.core.view.AView
-import com.idyria.osi.vui.html.standalone.StandaloneHTMLNode
 import org.w3c.dom.html.HTMLElement
 import com.idyria.osi.vui.html.HTMLNode
 

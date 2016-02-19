@@ -129,7 +129,7 @@ class AView[BT,T <: VUISGNode[BT,_]] extends TLogSource with ListeningSupport {
 
   var renderedNode: Option[T] = None
 
-  def content(cl: => T) = {
+  def viewContent(cl: => T) = {
     this.contentClosure = {
       v => cl
     }
@@ -243,7 +243,7 @@ abstract class AViewCompiler[BT,T <: AView[BT,_ <: VUISGNode[BT,_]]] extends Sou
       case true =>
 
         // Create View
-        var v = this.compile(targetFile.toURI().toURL()).newInstance()
+        var v = this.doCompile(targetFile.toURI().toURL()).newInstance()
 
         // Set for change watch
         if (listen) {
@@ -358,7 +358,7 @@ abstract class AViewCompiler[BT,T <: AView[BT,_ <: VUISGNode[BT,_]]] extends Sou
     /*logFine[AView[T]](s"VIEW IS AT: "+source.getPath)
     var targetName = source.getPath.split("/").last.replace(".", "_")*/
 
-    println(s"WWWCompiler for $source => ${this.compiler.settings2.outdir.value}")
+    println(s"WWWCompiler for $source => ${compiler.settings2.outputDirs}")
 
     // Read Content of file
     //---------
@@ -439,9 +439,11 @@ v.contentClosure =  { view =>
     var packageName = """package ([\w0-9\._]+)""".r.findFirstMatchIn(scala.io.Source.fromFile(new File("test.scala")).mkString).get.group(1)
 
     this.compiler.compileFiles(Seq(fileToCompile)) match {
-      case Some(error) => throw throw new RuntimeException(s"Failed for $source : " + error.message.toString())
+      case Some(error) => 
+        println(s"Error: "+error.message);
+        throw new RuntimeException(s"Failed for $source : " + error.message.toString())
       case None =>
-
+        println(s"Success by compile")
         Thread.currentThread.getContextClassLoader.loadClass(s"$packageName.$targetName").asInstanceOf[Class[T]]
     }
 

@@ -3,9 +3,13 @@ package com.idyria.osi.vui.html.basic
 import org.w3c.dom.html.HTMLElement
 import com.idyria.osi.vui.html.HTMLNode
 import scala.xml.Elem
+import java.net.URL
+import com.idyria.osi.vui.html.Wrapper
 
 trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   
+  // Content API
+  //----------------
   def content(cl: => Any) = {
     
     //--
@@ -13,6 +17,8 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     
   }
   
+  // Import XML Parsed Stuff
+  //----------
   def importHTML(xml:Elem) = {
     
     wrapper(xml.toString()){
@@ -20,11 +26,39 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     }
   }
   
-  def +(xml:Elem) = {
+  def $(xml:Elem) : Wrapper[HTMLElement, Wrapper[HTMLElement, _]]  = importHTML(xml)
+  
+  /*def +(xml:Elem) = {
     
     wrapper(xml.toString()){
       
     }
+  }*/
+  
+  // Manipulate Tree
+  //-----------
+  def move(n:HTMLNode[HTMLElement,_])(cl: => Any) = {
+    n.detach
+    this.switchToNode(n, {
+      cl
+    })
   }
+  
+  def moveWithContent(n:HTMLNode[HTMLElement,_])(cl: => Any) = {
+    n.detach
+    this.switchToNode(n, {
+      content(cl)
+    })
+  }
+  
+  // Script
+  //---------------
+  
+  def script(s:String) =  {
+    var resScript = this.createScript(new URL(""))
+    resScript.textContent = s
+  }
+  
+  
   
 }

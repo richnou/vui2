@@ -1,5 +1,5 @@
-package com.idyria.osi.vui.html.standlone
-
+package com.idyria.osi.vui.html.standalone
+/*
 import com.idyria.osi.vui.html.A
 import com.idyria.osi.vui.core.builders.RebuildableNode
 import com.idyria.osi.vui.html.InputText
@@ -8,7 +8,7 @@ import com.idyria.osi.vui.html.Html
 import com.idyria.osi.vui.html.Head
 import com.idyria.osi.vui.html.HTMLNode
 import com.idyria.osi.vui.html.Body
-import com.idyria.osi.vui.html.Div
+import com.idyria.osi.vui.html.Div*/
 
 /*
 

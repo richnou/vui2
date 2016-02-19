@@ -162,6 +162,7 @@ trait JFXFrameFactory extends com.idyria.osi.vui.core.definitions.VUIFrameFactor
         })
 
       }
+      this.onClose(this.@->("close"))
 
     }.asInstanceOf[VUIFrame[Node, VUIFrame[Node, _]]]
 

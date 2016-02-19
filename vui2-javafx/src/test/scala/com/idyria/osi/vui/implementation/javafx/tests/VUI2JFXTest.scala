@@ -1,7 +1,7 @@
 package com.idyria.osi.vui.implementation.javafx.tests
 
 import com.idyria.osi.vui.core.definitions.VUIBuilder
-import com.idyria.osi.vui.html.standlone.StandaloneHTMLViewCompiler
+import com.idyria.osi.vui.html.standalone.StandaloneHTMLViewCompiler
 import com.idyria.osi.vui.implementation.javafx.JavaFXRun
 import com.idyria.osi.vui.html.basic.BasicHTMLViewCompiler
 import javafx.scene.web.WebView
