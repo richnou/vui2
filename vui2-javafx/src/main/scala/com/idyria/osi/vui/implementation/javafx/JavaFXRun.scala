@@ -1,6 +1,5 @@
 package com.idyria.osi.vui.implementation.javafx
 
-
 import javafx.application.Platform
 import com.sun.javafx.tk.Toolkit
 import javafx.application.Application
@@ -9,54 +8,55 @@ import java.util.concurrent.Semaphore
 import com.idyria.osi.vui.core.VUIFactory
 import com.idyria.osi.vui.implementation.javafx.factories.JFXFinalFactory
 
-
 class JavaFXRun extends Application {
 
-    var cl: () => Unit = { () => }
+  var cl: () => Unit = { () => }
 
-    def start(stage: Stage) = {
-        stage.close()
-        cl()
+  def start(stage: Stage) = {
+    JavaFXRun.application = this
+    stage.close()
+    cl()
 
-        // Select VUI implementation for JFX thread
-        //---------------
-        VUIFactory.setImplementationForCurrentThread(new JFXFinalFactory)
+    // Select VUI implementation for JFX thread
+    //---------------
+    VUIFactory.setImplementationForCurrentThread(new JFXFinalFactory)
 
-        JavaFXRun.semaphore.release
+    JavaFXRun.semaphore.release
 
-        //stage.show()
-    }
+    //stage.show()
+  }
 
 }
 
 object JavaFXRun {
 
-    var semaphore = new Semaphore(0)
-    var started = false
-    var applicationThread: Option[Thread] = None
+  var application: Application = null
+  var semaphore = new Semaphore(0)
+  var started = false
+  var applicationThread: Option[Thread] = None
 
-    VUIFactory.setImplementationForCurrentThread(new JFXFinalFactory)
-    VUIFactory.defaultImplementation = Some(new JFXFinalFactory)
+  VUIFactory.setImplementationForCurrentThread(new JFXFinalFactory)
+  VUIFactory.defaultImplementation = Some(new JFXFinalFactory)
 
-    def onJavaFX[T](cl: => T): Option[T] = {
+  def onJavaFX[T](cl: => T): Option[T] = {
 
-        started match {
-            case true =>
+    started match {
+      case true =>
 
-                var r: Option[T] = None
-                Platform.runLater(new Runnable() {
-                    def run = {
-                        try { r = Some(cl) } finally { semaphore.release }
+        var r: Option[T] = None
+        Platform.runLater(new Runnable() {
+          def run = {
+            try { r = Some(cl) } finally { semaphore.release }
 
-                    }
-                })
-                //semaphore.acquire()
-                r
+          }
+        })
+        //semaphore.acquire()
+        r
 
-            // No grants in semaphore, start application
-            case false =>
+      // No grants in semaphore, start application
+      case false =>
 
-                /*applicationThread = Some(new Thread(new Runnable() {
+        /*applicationThread = Some(new Thread(new Runnable() {
           def run = {
             
             try {Application.launch(classOf[JavaFXRun])} finally {semaphore.release}
@@ -68,33 +68,33 @@ object JavaFXRun {
         // Wait started
         semaphore.acquire()*/
 
-                // Our Main app does release a credit in the semaphore
-                var fxThread = new Thread(new Runnable() {
-                    def run = {
+        // Our Main app does release a credit in the semaphore
+        var fxThread = new Thread(new Runnable() {
+          def run = {
 
-                        try { Application.launch(classOf[JavaFXRun]) } finally {}
+            try { Application.launch(classOf[JavaFXRun]) } finally {}
 
-                    }
-                })
-                fxThread.start()
+          }
+        })
+        fxThread.start()
 
-                semaphore.acquire()
+        semaphore.acquire()
 
-                started = true;
-                var r: Option[T] = None
-                Platform.runLater(new Runnable {
+        started = true;
+        var r: Option[T] = None
+        Platform.runLater(new Runnable {
 
-                    def run = {
-                        try { r = Some(cl) } finally { semaphore.release }
-                    }
-                })
-                // Acquire a semaphore to wait for the end of execution
-                semaphore.acquire()
-                r
+          def run = {
+            try { r = Some(cl) } finally { semaphore.release }
+          }
+        })
+        // Acquire a semaphore to wait for the end of execution
+        semaphore.acquire()
+        r
 
-        }
+    }
 
-        /* // Check Java FX has been started
+    /* // Check Java FX has been started
     //----------
     //var d = new DummyApplication
     applicationThread match {
@@ -138,15 +138,15 @@ object JavaFXRun {
     // Acquire a semaphore to wait for the end of execution
     semaphore.acquire()*/
 
-    }
+  }
 
 }
 
 trait VUIJavaFX {
-    def onJavaFX[T](cl: => T): T = {
-        JavaFXRun.onJavaFX {
-            cl
-        }.get
+  def onJavaFX[T](cl: => T): T = {
+    JavaFXRun.onJavaFX {
+      cl
+    }.get
 
-    }
+  }
 }

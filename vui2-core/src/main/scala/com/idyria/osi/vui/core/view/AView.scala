@@ -11,17 +11,14 @@ import com.idyria.osi.tea.listeners.ListeningSupport
 import java.io.File
 import java.net.URLClassLoader
 
-
 /**
  *
  */
-class AView[BT,T <: VUISGNode[BT,_]] extends TLogSource with ListeningSupport {
-
-  
+class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport {
 
   // Recompilation interface
   //---------------
-  def replaceWith(v: AView[BT,_ <: VUISGNode[BT,_]]) = {
+  def replaceWith(v: AView[BT, _ <: VUISGNode[BT, _]]) = {
     println(s"Requesting Change!")
     this.@->("view.replace", v)
   }
@@ -76,7 +73,7 @@ class AView[BT,T <: VUISGNode[BT,_]] extends TLogSource with ListeningSupport {
   // View  Composition
   //------------------
 
-  var composedViews = List[AView[BT,T]]()
+  var composedViews = List[AView[BT, T]]()
 
   /**
    * Shortcut to load a View File and create a view from it
@@ -107,7 +104,7 @@ class AView[BT,T <: VUISGNode[BT,_]] extends TLogSource with ListeningSupport {
 
   }*/
 
-  def compose(baseClass: Class[_ <: AView[BT,T]]): AView[BT,T] = {
+  def compose(baseClass: Class[_ <: AView[BT, T]]): AView[BT, T] = {
 
     // Instanciate
     //-------------
@@ -125,7 +122,7 @@ class AView[BT,T <: VUISGNode[BT,_]] extends TLogSource with ListeningSupport {
 
   // Content/ Render
   //----------------
-  var contentClosure: AView[BT,T] ⇒ T = null
+  var contentClosure: AView[BT, T] ⇒ T = null
 
   var renderedNode: Option[T] = None
 
@@ -147,27 +144,25 @@ class AView[BT,T <: VUISGNode[BT,_]] extends TLogSource with ListeningSupport {
     renderedNode match {
       case Some(n) => n
       case None =>
-        logFine[AView[BT,T]](s"[RW] Rendering view: " + this.hashCode)
+        logFine[AView[BT, T]](s"[RW] Rendering view: " + this.hashCode)
         var node = contentClosure(this)
         renderedNode = Some(node)
         this.@->("rendered", node)
         node
     }
 
-    
-
   }
-  
-  def rerender : T = {
+
+  def rerender: T = {
     this.renderedNode = None
     this.render
   }
 
 }
 
-abstract class AViewCompiler[BT,T <: AView[BT,_ <: VUISGNode[BT,_]]] extends SourceCompiler[Class[T]] {
+abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends SourceCompiler[Class[T]] {
 
-  implicit def viewToSGNode(v: AView[BT,_ <: VUISGNode[Any,_]]): VUISGNode[Any,_] = v.render
+  implicit def viewToSGNode(v: AView[BT, _ <: VUISGNode[Any, _]]): VUISGNode[Any, _] = v.render
 
   // Configured Imports
   //---------------
@@ -241,16 +236,24 @@ abstract class AViewCompiler[BT,T <: AView[BT,_ <: VUISGNode[BT,_]]] extends Sou
 
     targetFile.exists() match {
       case true =>
-
+        
         // Create View
         var v = this.doCompile(targetFile.toURI().toURL()).newInstance()
-
+        
         // Set for change watch
         if (listen) {
+
           fileWatcher.onFileChange(targetFile) {
-            v.replaceWith(this.createView(cl, false))
+            try {
+              v.replaceWith(this.createView(cl, false))
+            } catch {
+              case e: Throwable =>
+                e.printStackTrace()
+            }
           }
         }
+
+        
 
         v.asInstanceOf[T]
 
@@ -439,8 +442,8 @@ v.contentClosure =  { view =>
     var packageName = """package ([\w0-9\._]+)""".r.findFirstMatchIn(scala.io.Source.fromFile(new File("test.scala")).mkString).get.group(1)
 
     this.compiler.compileFiles(Seq(fileToCompile)) match {
-      case Some(error) => 
-        println(s"Error: "+error.message);
+      case Some(error) =>
+        println(s"Error: " + error.message);
         throw new RuntimeException(s"Failed for $source : " + error.message.toString())
       case None =>
         println(s"Success by compile")
