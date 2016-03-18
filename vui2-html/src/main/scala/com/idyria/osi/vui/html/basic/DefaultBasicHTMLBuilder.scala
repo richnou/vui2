@@ -5,6 +5,8 @@ import com.idyria.osi.vui.html.HTMLNode
 import scala.xml.Elem
 import java.net.URL
 import com.idyria.osi.vui.html.Wrapper
+import java.net.URI
+import com.idyria.osi.vui.html.Script
 
 trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   
@@ -54,9 +56,13 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   // Script
   //---------------
   
-  def script(s:String) =  {
-    var resScript = this.createScript(new URL(""))
-    resScript.textContent = s
+  def script(s:String) : Script[HTMLElement, Script[HTMLElement, _]] =  {
+    script(new URI("")) {
+      currentNode.attributes = currentNode.attributes.empty
+      textContent(s)
+    }
+   /* var resScript = this.createScript(new URI(""))
+    resScript.textContent = s*/
   }
   
   

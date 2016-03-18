@@ -3,6 +3,7 @@ package com.idyria.osi.vui.html.lib.semanticui
 import com.idyria.osi.vui.html.basic.BasicHTMLBuilderTrait
 import org.w3c.dom.html.HTMLElement
 import java.net.URL
+import java.net.URI
 
 trait SemanticUIBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
@@ -19,7 +20,7 @@ trait SemanticUIBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     super.html {
 
       head {
-        script(new URL("https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")) {
+        script(new URI("https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")) {
 
         }
 

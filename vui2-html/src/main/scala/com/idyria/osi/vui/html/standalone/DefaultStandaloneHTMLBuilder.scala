@@ -29,13 +29,13 @@ trait DefaultStandaloneHTMLBuilder extends StandaloneBasicHTMLBuilderTrait[HTMLE
     //-- Add Standalone Script
     //-- 1. Add First, or After JQuery
     node.children.collectFirst {
-      case e: Script[_, _] if (e.src.toExternalForm().contains("jquery")) =>
+      case e: Script[_, _] if (e.src.toString.contains("jquery")) =>
         node.children.indexOf(e)
     } match {
       case Some(jqueryNodeIndex) =>
         switchToNode(node, {
           println(s"FOUND JQUERY")
-          var resScript = script(getClass.getClassLoader.getResource("standalone/vui-standalone.js")) {
+          var resScript = script(getClass.getClassLoader.getResource("standalone/vui-standalone.js").toURI()) {
 
           }
 
@@ -45,7 +45,7 @@ trait DefaultStandaloneHTMLBuilder extends StandaloneBasicHTMLBuilderTrait[HTMLE
         })
       case None =>
         switchToNode(node, {
-          script(getClass.getClassLoader.getResource("standalone/vui-standalone.js")) {
+          script(getClass.getClassLoader.getResource("standalone/vui-standalone.js").toURI()) {
 
           }
         })

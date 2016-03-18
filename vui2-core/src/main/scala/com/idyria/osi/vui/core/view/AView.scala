@@ -10,6 +10,8 @@ import com.idyria.osi.vui.core.definitions.VUISGNode
 import com.idyria.osi.tea.listeners.ListeningSupport
 import java.io.File
 import java.net.URLClassLoader
+import com.idyria.osi.tea.file.TeaFileUtils
+import com.idyria.osi.tea.file.DirectoryUtilities
 
 /**
  *
@@ -18,7 +20,7 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
 
   // Recompilation interface
   //---------------
-  def replaceWith(v: AView[BT, _ <: VUISGNode[BT, _]]) = {
+  def replaceWith(v: Class[_ <: AView[BT, _ <: VUISGNode[BT, _]]]) = {
     println(s"Requesting Change!")
     this.@->("view.replace", v)
   }
@@ -188,20 +190,51 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
   // Compiler Setup
   //---------------------
 
-  //-- Add its output to URL classloader 
-  /*Thread.currentThread().getContextClassLoader match {
-    case cl : AIBApplicationClassloader => 
-      
-      var eout = new File("eout")
+  var tempSourceFolder = new File("target/generated-views")
+  var outputClassesFolder = new File("target/views-classes")
+
+  var fileWatcher = new FileWatcher
+  fileWatcher.start
+
+  /**
+   * Init Compiler and stuff
+   */
+  def initCompiler = {
+
+    //-- Create Temp Source Folder and Output
+    this.tempSourceFolder.mkdirs()
+    this.outputClassesFolder.mkdirs()
+
+    DirectoryUtilities.deleteDirectoryContent(this.tempSourceFolder)
+    DirectoryUtilities.deleteDirectoryContent(this.outputClassesFolder)
+
+    //-- Setup Compiler 
+    compiler.settings2.outputDirs.setSingleOutput(this.outputClassesFolder.getAbsolutePath)
+
+    enforceClassLoader
+  }
+
+  def enforceClassLoader = {
+    
+    //-- Add Output to CurrentClassLoader, or Update ClassLoader
+    Thread.currentThread().getContextClassLoader match {
+      case cl: ExtensibleURLClassLoader =>
+
+        /*var eout = new File("eout")
       eout.mkdirs()
       compiler.settings2.outputDirs.setSingleOutput(eout.getAbsolutePath)
       
-      println(s"Adding output to cl: "+this.compiler.settings2.outputDirs.getSingleOutput.get.file)
-     // cl.addURL(new File(this.compiler.settings2.outdir.value).getAbsoluteFile.toURI().toURL())
-      
-      cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
-    case _ => 
-  }*/
+      println(s"Adding output to cl: "+this.compiler.settings2.outputDirs.getSingleOutput.get.file)*/
+        // cl.addURL(new File(this.compiler.settings2.outdir.value).getAbsoluteFile.toURI().toURL())
+
+        // cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
+        cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
+      case other =>
+        var cl = new ExtensibleURLClassLoader(Thread.currentThread().getContextClassLoader)
+        Thread.currentThread().setContextClassLoader(cl)
+        cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
+    }
+  }
 
   /**
    * Add Trait as compile trait, and also as Import
@@ -226,26 +259,30 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
   // Magic Compilation Find
   //--------------------
 
-  var fileWatcher = new FileWatcher
-  fileWatcher.start
-
   def createView(cl: Class[_ <: T], listen: Boolean = true): T = {
 
     var targetFile = new File(new File("src/main/scala"), cl.getCanonicalName.replace(".", File.separator) + ".scala")
-    println(s"Looking for file: " + targetFile.getAbsolutePath + "-> " + targetFile.exists())
+
+    //println(s"Looking for file: " + targetFile.getAbsolutePath + "-> " + targetFile.exists())
 
     targetFile.exists() match {
       case true =>
-        
-        // Create View
-        var v = this.doCompile(targetFile.toURI().toURL()).newInstance()
-        
+
+        // Compile View and create Instance
+        var viewClass = this.doCompile(targetFile.toURI().toURL())
+        var view = viewClass.newInstance().asInstanceOf[T]
+
         // Set for change watch
         if (listen) {
 
           fileWatcher.onFileChange(targetFile) {
             try {
-              v.replaceWith(this.createView(cl, false))
+
+              // Recompile
+              var newClass = this.doCompile(targetFile.toURI().toURL())
+
+              // Update
+              view.replaceWith(newClass.asInstanceOf[Class[T]])
             } catch {
               case e: Throwable =>
                 e.printStackTrace()
@@ -253,9 +290,8 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
           }
         }
 
-        
-
-        v.asInstanceOf[T]
+        // Return new Instance
+        view
 
       case false => cl.newInstance()
     }
@@ -285,12 +321,12 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
 
     // File Name
     //--------------
-    var targetName = source.getPath.replace(".scala", "").split("/").last.replace(".", "_").map {
+    var originalName = source.getPath.replace(".scala", "").split("/").last.replace(".", "_").map {
       case '.' => "_"
       case '/' => "_"
       case c => c
     }.mkString
-    targetName = targetName + "_" + System.currentTimeMillis()
+    var targetName = originalName + "_" + System.currentTimeMillis()
 
     // If the file ends with Scala, assume it is complete
     //-----------------------------
@@ -353,8 +389,10 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
       }
         
         """
-        TeaIOUtils.writeToFile(new File("test.scala"), viewString)
-        new File("test.scala")
+
+        var outputFile = new File(this.tempSourceFolder, s"$originalName.scala")
+        TeaIOUtils.writeToFile(outputFile, viewString)
+        outputFile
 
     }
 
@@ -363,83 +401,13 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
 
     println(s"WWWCompiler for $source => ${compiler.settings2.outputDirs}")
 
-    // Read Content of file
-    //---------
-    /*  var closureContent = scala.io.Source.fromInputStream(source.openStream).mkString
-
-    // Compile as Object
-    //------------------------------
-
-    //logFine[AView[T]](s"Adding imports: ${compileImports.map { i ⇒ s"import ${i.getCanonicalName()}" }.mkString("\n")}")
-    // logFine[AView[T]](s"Adding traits: ${ compileTraits.map(cl ⇒ cl.getCanonicalName()).mkString("with ", " with ", "")}")
-
-    //-- Prepare traits
-    var traits = AView[T].compileTraits.size match {
-      case 0 => ""
-      case _ => AView[T].compileTraits.map(cl ⇒ cl.getCanonicalName()).mkString("with ", " with ", "")
-    }
-
-    var viewString = s"""
-    
-  package wwwviews
-
-    import com.idyria.osi.wsb.webapp.view._  
-    import  com.idyria.osi.wsb.webapp.injection.Injector._
-    import com.idyria.osi.wsb.webapp.injection._
-    
-    ${AView[T].compileImports.map { i ⇒ s"import ${i.getCanonicalName()}" }.mkString("\n")}
-    
-    ${AView[T].compileImportPackages.map { p ⇒ s"import ${p.getName()}._" }.mkString("\n")}
-    
-    class $targetName extends AView[T] $traits {    
-    
-      
-   //   this.viewSource = \"$source\"
-  
-    this.contentClosure = {
-        view =>  
-          
-          $closureContent
-      
-      }
-    
-  }
-    
-    """
-    TeaIOUtils.writeToFile(new File("test.scala"), viewString)
-    // Compile as Clousre, and apply to a new AView[T]
-    //---------------
-    /*var closure = s"""    
-v.contentClosure =  { view => 
-   $closureContent
-}
-"""
-
-    var wwwview = new AView[T]
-    //sview.sourceURL = source
-
-    compiler.bind("v", wwwview)
-
-    //compiler.compile(new File(source.getFile))
-    try {
-
-      compiler.interpret(closure)
-
-    } catch {
-      case e: Throwable ⇒
-
-        logFine[AView[T]](s"Compilation error in SView source file: @$source")
-        throw new ViewRendererException(s"An error occured while preparing SView @$source: ${e.getMessage()}", e)
-    }*/
-    //
-*/
-    var cl = new URLClassLoader(Array[URL]())
+    //var cl = new URLClassLoader(Array[URL]())
 
     // Compile and return 
     //------------
 
     // Get Class Name
-    var packageName = """package ([\w0-9\._]+)""".r.findFirstMatchIn(scala.io.Source.fromFile(new File("test.scala")).mkString).get.group(1)
+    var packageName = """package ([\w0-9\._]+)""".r.findFirstMatchIn(scala.io.Source.fromFile(fileToCompile).mkString).get.group(1)
 
     this.compiler.compileFiles(Seq(fileToCompile)) match {
       case Some(error) =>
@@ -447,30 +415,11 @@ v.contentClosure =  { view =>
         throw new RuntimeException(s"Failed for $source : " + error.message.toString())
       case None =>
         println(s"Success by compile")
+        enforceClassLoader
         Thread.currentThread.getContextClassLoader.loadClass(s"$packageName.$targetName").asInstanceOf[Class[T]]
     }
 
   }
-
-  /*compiler.interpret(viewString)
-
-    compiler.imain.valueOfTerm("viewInstance") match {
-      case None =>
-
-        throw new RuntimeException("Nothing compiled: " + compiler.interpreterOutput.getBuffer().toString())
-
-      case Some(wwwview) =>
-        wwwview.asInstanceOf[AView[T]]
-    }*/
-
-  /* var wwwview = compiler.imain.valueOfTerm("viewInstance").get.asInstanceOf[AView[T]]
-
-    logFine[AView[T]]("Compiling view: " + source + " to " + wwwview.hashCode())
-
-    // Save as compiled Source
-    //------------
-
-    wwwview*/
 
 }
 

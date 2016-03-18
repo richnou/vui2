@@ -45,6 +45,21 @@ package com.idyria.osi.vui.html
         }
     }
   }
+  
+  def clearChildren = {
+    super.clear
+    //println(s"Delegate is :$this.delegate")
+    this.delegate match {
+      case null =>
+      case d =>
+        d.setTextContent("")
+        var cn = d.getChildNodes
+        (0 until cn.getLength) foreach {
+          i =>
+            d.removeChild(cn.item(i))
+        }
+    }
+  }
 
   //----------------------
   // General Control

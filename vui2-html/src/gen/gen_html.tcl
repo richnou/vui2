@@ -37,10 +37,10 @@ $htmlScala apply {
             Body        body 
             Head        head 
             Html        html 
-            Image       {image    src/java.net.URL}            
-            Stylesheet  {link  href/java.net.URL}
+            Image       {image    src/java.net.URI}            
+            Stylesheet  {link  href/java.net.URI}
             A           {a href}
-            Script      {script  src/java.net.URL}
+            Script      {script  src/java.net.URI}
             JavaScript  {script  textContent/String}
             I           i
         
@@ -66,6 +66,7 @@ $htmlScala apply {
             Input       input
             Select      select
             Option      {option value/String}
+            Button      {button textContent/String}
         
             Wrapper     {wrapper textContent/String}
             
