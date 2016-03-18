@@ -168,7 +168,7 @@ trait DefaultStandaloneHTMLBuilder extends StandaloneBasicHTMLBuilderTrait[HTMLE
           currentStandaloneNode.base.setAttribute("disabled", "true")
           cl
         } finally {
-          currentStandaloneNode.base.setAttribute("disabled", "false")
+         // currentStandaloneNode.base.setAttribute("disabled", "false")
         }
       }
       th.setDaemon(true)
