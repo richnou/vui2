@@ -3,7 +3,6 @@ package com.idyria.osi.vui.core.view
 
 import java.io.File
 import java.net.URL
-
 import com.idyria.osi.aib.core.compiler.SourceCompiler
 import com.idyria.osi.aib.core.utils.files.FileWatcher
 import com.idyria.osi.tea.file.DirectoryUtilities
@@ -11,6 +10,11 @@ import com.idyria.osi.tea.io.TeaIOUtils
 import com.idyria.osi.tea.listeners.ListeningSupport
 import com.idyria.osi.tea.logging.TLogSource
 import com.idyria.osi.vui.core.definitions.VUISGNode
+import java.net.URLClassLoader
+import scala.reflect.io.AbstractFile
+import org.xml.sax.helpers.NewInstance
+import com.idyria.osi.tea.compile.IDCompiler
+import com.idyria.osi.tea.compile.ClassDomainSupport
 
 /**
  *
@@ -29,7 +33,7 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
   var parentView: Option[AView[BT, _]] = None
 
   def getTopParentView = {
-    var currentView : AView[BT, _] = this
+    var currentView: AView[BT, _] = this
     while (currentView.parentView != None)
       currentView = currentView.parentView.get
 
@@ -76,9 +80,19 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
 
 }
 
-abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends SourceCompiler[Class[T]] {
+abstract class AViewCompiler2[T <: AView[_, _]] extends ClassDomainSupport {
+
+}
+
+class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDomainSupport {
 
   implicit def viewToSGNode(v: AView[BT, _ <: VUISGNode[Any, _]]): VUISGNode[Any, _] = v.render
+
+  // The Actual Live Compiler and its setup
+  //------------------
+  var idcompiler = new IDCompiler
+  var tempSourceFolder = new File("target/generated-views")
+  var outputClassesFolder = new File("target/generated-views-classes")
 
   // Configured Imports
   //---------------
@@ -104,9 +118,6 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
   // Compiler Setup
   //---------------------
 
-  var tempSourceFolder = new File("target/generated-views")
-  var outputClassesFolder = new File("target/views-classes")
-
   var fileWatcher = new FileWatcher
   fileWatcher.start
 
@@ -114,7 +125,7 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
    * Init Compiler and stuff
    */
   def initCompiler = {
-
+    println(s"INITING COMPILER")
     //-- Create Temp Source Folder and Output
     this.tempSourceFolder.mkdirs()
     this.outputClassesFolder.mkdirs()
@@ -123,12 +134,27 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
     DirectoryUtilities.deleteDirectoryContent(this.outputClassesFolder)
 
     //-- Setup Compiler 
-    compiler.settings2.outputDirs.setSingleOutput(this.outputClassesFolder.getAbsolutePath)
+    idcompiler.addSourceOutputFolders(tempSourceFolder -> outputClassesFolder)
 
-    enforceClassLoader
+    //compiler.settings2.outputDirs.add(this.tempSourceFolder.getAbsolutePath, this.outputClassesFolder.getAbsolutePath)
+    //compiler.settings2.outputDirs.setSingleOutput(this.outputClassesFolder.getAbsolutePath)
+    //compiler.settings2.outdir.default
+    //compiler.settings2.outputDirs.setSingleOutput(this.outputClassesFolder.getPath)
+    //compiler.settings2.outputDirs.setSingleOutput(AbstractFile.getDirectory(this.outputClassesFolder.getAbsoluteFile))
+    //compiler.outputClassesFolder = this.outputClassesFolder
+    //compiler.settings2.outputDirs.add(this.tempSourceFolder.getAbsolutePath, this.outputClassesFolder.getAbsolutePath)
+
+    //compiler.recreate
+    //enforceClassLoader()
   }
 
-  def enforceClassLoader = {
+  /**
+   * This Method makes sure the Current Thread Classloader has the Output Path into its output URLS
+   * If not, it will force updating the classloader
+   *
+   * If a target class is provided, and this class is already into a ClassDomain, the current Thread ClassLoader is resolved to make sure it is correctly set
+   */
+  /*def enforceClassLoader(targetClass: Option[Class[_]] = None) = {
 
     //-- Add Output to CurrentClassLoader, or Update ClassLoader
     Thread.currentThread().getContextClassLoader match {
@@ -142,13 +168,18 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
         // cl.addURL(new File(this.compiler.settings2.outdir.value).getAbsoluteFile.toURI().toURL())
 
         // cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
-        cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
+        cl.addURL(this.outputClassesFolder.toURI().toURL())
       case other =>
+
         var cl = new ExtensibleURLClassLoader(Thread.currentThread().getContextClassLoader)
+        cl.addURL(this.outputClassesFolder.toURI().toURL())
         Thread.currentThread().setContextClassLoader(cl)
-        cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
+
+      //println(s"Single Output: "+this.compiler.settings2.outputDirs.getSingleOutput.get.path)
+      //cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
+
     }
-  }
+  }*/
 
   /**
    * Add Trait as compile trait, and also as Import
@@ -175,40 +206,103 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
 
   def createView(cl: Class[_ <: T], listen: Boolean = true): T = {
 
-    var targetFile = new File(new File("src/main/scala"), cl.getCanonicalName.replace(".", File.separator) + ".scala")
+    //-- Swtich CL 
+    //var startTHCL = Thread.currentThread().getContextClassLoader
+    //try {
 
-    //println(s"Looking for file: " + targetFile.getAbsolutePath + "-> " + targetFile.exists())
+    // Thread.currentThread().setContextClassLoader(cl.getClassLoader)
+    /*cl.getClassLoader match {
+      case cl: URLClassLoader =>
+        println(s"Adding Support of Class Classloader to compilter")
+        compiler.addCLSupport(cl)
+      case _ =>
+    }*/
+
+    var targetClassFileName = cl.getCanonicalName.replace(".", File.separator) + ".scala"
+    var targetFile = new File(new File("src/main/scala"), targetClassFileName)
+
+    println(s"Looking for file: " + targetFile.getAbsolutePath + "-> " + targetFile.exists())
+
+    targetFile = targetFile.exists() match {
+      case false =>
+        cl.getClassLoader match {
+          case cl: URLClassLoader =>
+            println(s"No File for class, but it is in a URL classloader, there is a change teh sources might not be local")
+            cl.getURLs.foreach {
+              u =>
+                println(s"--- Available URL: -> $u -> ${u.getProtocol.startsWith("file")} && ${u.getPath} && ${new File(u.getPath).isDirectory()}")
+            }
+
+            cl.getURLs.find { url => url.getProtocol.startsWith("file") && url.getPath.endsWith("classes/") && new File(url.getPath).isDirectory() } match {
+              case Some(url) =>
+                println(s"--> Seems to be a good canditate -> " + url)
+
+                //-- Search in target/classes/../../src/main/scala/path/to/class.scala
+                var sourceFolderFile = new File(new File(url.getPath).getParentFile.getParentFile, List("src", "main", "scala").mkString(File.separator)).getAbsoluteFile
+
+                var newFile = new File(sourceFolderFile, targetClassFileName).getAbsoluteFile
+                println(s"--> looking into $newFile")
+                newFile.exists() match {
+                  case true =>
+                    var outputFolderFile =
+                      idcompiler.addSourceOutputFolders(sourceFolderFile -> new File(url.getPath))
+                    newFile
+                  case false => targetFile
+                }
+
+              case None =>
+                targetFile
+            }
+          case _ =>
+            targetFile
+        }
+
+      case true => targetFile
+    }
 
     targetFile.exists() match {
       case true =>
 
         // Compile View and create Instance
-        var viewClass = this.doCompile(targetFile.toURI().toURL())
-        var view = viewClass.newInstance().asInstanceOf[T]
+        // Enforce Classloader during compilation
+        //------------------
+        this.withClassLoaderFor(cl) {
+          this.withURLInClassloader(this.outputClassesFolder.toURI().toURL) {
 
-        // Set for change watch
-        if (listen) {
+            var viewClass = this.doCompile(targetFile.toURI().toURL())
+            var view = viewClass.newInstance().asInstanceOf[T]
 
-          fileWatcher.onFileChange(targetFile) {
-            try {
+            // Set for change watch
+            if (listen) {
 
-              // Recompile
-              var newClass = this.doCompile(targetFile.toURI().toURL())
+              fileWatcher.onFileChange(targetFile) {
+                try {
 
-              // Update
-              view.replaceWith(newClass.asInstanceOf[Class[T]])
-            } catch {
-              case e: Throwable =>
-                e.printStackTrace()
+                  // Recompile
+                  this.withClassLoaderFor(viewClass) {
+                    var newClass = this.doCompile(targetFile.toURI().toURL())
+
+                    // Update
+                    view.replaceWith(newClass.asInstanceOf[Class[T]])
+                  }
+
+                } catch {
+                  case e: Throwable =>
+                    e.printStackTrace()
+                }
+              }
             }
+
+            // Return new Instance
+            view
           }
         }
 
-        // Return new Instance
-        view
-
       case false => cl.newInstance()
     }
+    /*} finally {
+      Thread.currentThread().setContextClassLoader(startTHCL)
+    }*/
 
   }
 
@@ -231,6 +325,7 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
 
     // Class Loading
     //---------------
+
     //var currentCL = Thread.currentThread().getContextClassLoader
 
     // File Name
@@ -262,8 +357,12 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
         // newContent = content.replaceFirst("""object ([\w0-9_]+) """,s"object $targetName ")
 
         // Write
-        TeaIOUtils.writeToFile(new File("test.scala"), newContent)
-        new File("test.scala")
+        //TeaIOUtils.writeToFile(new File("test.scala"), newContent)
+        //new File("test.scala")
+
+        var outputFile = new File(this.tempSourceFolder, s"$originalName.scala")
+        TeaIOUtils.writeToFile(outputFile, newContent)
+        outputFile
 
       //-- File is incomplete, create a compilable version
       case path =>
@@ -313,7 +412,11 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
     /*logFine[AView[T]](s"VIEW IS AT: "+source.getPath)
     var targetName = source.getPath.split("/").last.replace(".", "_")*/
 
-    println(s"WWWCompiler for $source => ${compiler.settings2.outputDirs}")
+    println(s"***** Settings: " + idcompiler.settings2.hashCode())
+
+    //compiler.settings2.outputDirs.
+    //compiler.settings2.outputDirs.add(this.tempSourceFolder.getAbsolutePath, this.outputClassesFolder.getAbsolutePath)
+    println(s"WWWCompiler for $source => ${idcompiler.settings2.outputDirs.outputs}")
 
     //var cl = new URLClassLoader(Array[URL]())
 
@@ -321,16 +424,33 @@ abstract class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends 
     //------------
 
     // Get Class Name
+
     var packageName = """package ([\w0-9\._]+)""".r.findFirstMatchIn(scala.io.Source.fromFile(fileToCompile).mkString).get.group(1)
 
-    this.compiler.compileFiles(Seq(fileToCompile)) match {
+    this.idcompiler.compileFiles(Seq(fileToCompile)) match {
       case Some(error) =>
         println(s"Error: " + error.message);
         throw new RuntimeException(s"Failed for $source : " + error.message.toString())
       case None =>
         println(s"Success by compile")
-        enforceClassLoader
-        Thread.currentThread.getContextClassLoader.loadClass(s"$packageName.$targetName").asInstanceOf[Class[T]]
+
+        try {
+          var resClass = Thread.currentThread.getContextClassLoader.loadClass(s"$packageName.$targetName")
+
+          //resClass.asSubclass(Thread.currentThread.getContextClassLoader.loadClass(T))
+          println(s"ResClass SuperClass: " + resClass.getSuperclass.getCanonicalName)
+          //resClass.newInstance().asInstanceOf[T]
+          resClass.asInstanceOf[Class[T]]
+
+        } catch {
+          case e: ClassNotFoundException =>
+            println(s"Could not find class")
+            Thread.currentThread.getContextClassLoader.asInstanceOf[URLClassLoader].getURLs.foreach {
+              url =>
+              //println(s"Available source: $url")
+            }
+            throw e
+        }
     }
 
   }
