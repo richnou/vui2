@@ -10,6 +10,8 @@ import com.idyria.osi.vui.html.Script
 
 trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   
+  
+  
   // Content API
   //----------------
   def content(cl: => Any) = {
@@ -66,5 +68,14 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   }
   
   
+  
+}
+
+object DefaultBasicHTMLBuilder {
+  implicit class NoDoubleSlash(val underlying: String) extends AnyVal {
+    def noDoubleSlash: String = underlying.replaceAll("//+", "/")
+  }
+  
+  //implicit def c(u:String) = new NoDoubleSlash(u)
   
 }
