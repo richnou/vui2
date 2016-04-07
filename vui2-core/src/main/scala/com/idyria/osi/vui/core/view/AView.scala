@@ -15,11 +15,14 @@ import scala.reflect.io.AbstractFile
 import org.xml.sax.helpers.NewInstance
 import com.idyria.osi.tea.compile.IDCompiler
 import com.idyria.osi.tea.compile.ClassDomainSupport
+import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
+import com.idyria.osi.tea.errors.ErrorSupport
 
 /**
  *
  */
-class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport {
+class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport with ErrorSupport {
 
   // Recompilation interface
   //---------------
@@ -38,6 +41,25 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
       currentView = currentView.parentView.get
 
     currentView
+  }
+  
+  // Proxy
+  //-----------------  
+  
+  var proxy : Option[_ <: AView[BT, _]] = None
+  
+  /**
+   * Returns the Proxy or itself if excluseSelf not set
+   */
+  def getProxy[VT <: AView[BT, _]](implicit tag: ClassTag[VT]) : Option[VT] = {
+   
+    proxy match {
+      // Return proxy or self if it is the right type
+      case Some(proxied) if(tag.runtimeClass.isInstance(proxied)) => Some(proxied.asInstanceOf[VT])
+      case None if (tag.runtimeClass.isInstance(this)) => Some(this.asInstanceOf[VT])
+      case None => None
+    }
+    
   }
 
   // Content/ Render
@@ -136,50 +158,7 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
     //-- Setup Compiler 
     idcompiler.addSourceOutputFolders(tempSourceFolder -> outputClassesFolder)
 
-    //compiler.settings2.outputDirs.add(this.tempSourceFolder.getAbsolutePath, this.outputClassesFolder.getAbsolutePath)
-    //compiler.settings2.outputDirs.setSingleOutput(this.outputClassesFolder.getAbsolutePath)
-    //compiler.settings2.outdir.default
-    //compiler.settings2.outputDirs.setSingleOutput(this.outputClassesFolder.getPath)
-    //compiler.settings2.outputDirs.setSingleOutput(AbstractFile.getDirectory(this.outputClassesFolder.getAbsoluteFile))
-    //compiler.outputClassesFolder = this.outputClassesFolder
-    //compiler.settings2.outputDirs.add(this.tempSourceFolder.getAbsolutePath, this.outputClassesFolder.getAbsolutePath)
-
-    //compiler.recreate
-    //enforceClassLoader()
   }
-
-  /**
-   * This Method makes sure the Current Thread Classloader has the Output Path into its output URLS
-   * If not, it will force updating the classloader
-   *
-   * If a target class is provided, and this class is already into a ClassDomain, the current Thread ClassLoader is resolved to make sure it is correctly set
-   */
-  /*def enforceClassLoader(targetClass: Option[Class[_]] = None) = {
-
-    //-- Add Output to CurrentClassLoader, or Update ClassLoader
-    Thread.currentThread().getContextClassLoader match {
-      case cl: ExtensibleURLClassLoader =>
-
-        /*var eout = new File("eout")
-      eout.mkdirs()
-      compiler.settings2.outputDirs.setSingleOutput(eout.getAbsolutePath)
-      
-      println(s"Adding output to cl: "+this.compiler.settings2.outputDirs.getSingleOutput.get.file)*/
-        // cl.addURL(new File(this.compiler.settings2.outdir.value).getAbsoluteFile.toURI().toURL())
-
-        // cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
-        cl.addURL(this.outputClassesFolder.toURI().toURL())
-      case other =>
-
-        var cl = new ExtensibleURLClassLoader(Thread.currentThread().getContextClassLoader)
-        cl.addURL(this.outputClassesFolder.toURI().toURL())
-        Thread.currentThread().setContextClassLoader(cl)
-
-      //println(s"Single Output: "+this.compiler.settings2.outputDirs.getSingleOutput.get.path)
-      //cl.addURL(this.compiler.settings2.outputDirs.getSingleOutput.get.file.getAbsoluteFile.toURI().toURL())
-
-    }
-  }*/
 
   /**
    * Add Trait as compile trait, and also as Import
@@ -188,10 +167,6 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
 
     //-- Add To compile traits
     compileTraits = (compileTraits :+ cl).distinct
-    /*compileTraits.contains(cl) match {
-      case false ⇒ compileTraits = compileTraits :+ cl
-      case _ ⇒
-    }*/
 
     //-- Add to imports
     addCompileImport(cl)
@@ -203,23 +178,12 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
 
   // Magic Compilation Find
   //--------------------
+  var standardSearchPath = new File("src/main/scala")
 
-  def createView(cl: Class[_ <: T], listen: Boolean = true): T = {
-
-    //-- Swtich CL 
-    //var startTHCL = Thread.currentThread().getContextClassLoader
-    //try {
-
-    // Thread.currentThread().setContextClassLoader(cl.getClassLoader)
-    /*cl.getClassLoader match {
-      case cl: URLClassLoader =>
-        println(s"Adding Support of Class Classloader to compilter")
-        compiler.addCLSupport(cl)
-      case _ =>
-    }*/
+  def createView[VT <: T](refObject: Option[VT], cl: Class[VT], listen: Boolean = true)(implicit tag: TypeTag[VT]): VT = {
 
     var targetClassFileName = cl.getCanonicalName.replace(".", File.separator) + ".scala"
-    var targetFile = new File(new File("src/main/scala"), targetClassFileName)
+    var targetFile = new File(standardSearchPath, targetClassFileName)
 
     println(s"Looking for file: " + targetFile.getAbsolutePath + "-> " + targetFile.exists())
 
@@ -270,7 +234,7 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
           this.withURLInClassloader(this.outputClassesFolder.toURI().toURL) {
 
             var viewClass = this.doCompile(targetFile.toURI().toURL())
-            var view = viewClass.newInstance().asInstanceOf[T]
+            var view = this.newInstance(refObject, viewClass.asInstanceOf[Class[VT]])
 
             // Set for change watch
             if (listen) {
@@ -298,11 +262,112 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
           }
         }
 
-      case false => cl.newInstance()
+      case false => this.newInstance(refObject, cl)
     }
     /*} finally {
       Thread.currentThread().setContextClassLoader(startTHCL)
     }*/
+
+  }
+
+  def newInstance[VT <: T](refObject: Option[VT], cl: Class[VT])(implicit tag: TypeTag[VT]): VT = {
+
+    println(s"Instanciating $cl with refObject $cl")
+
+    // Try to find a construtor with 0 arguments
+    cl.getConstructors.find {
+      c => c.getParameterCount == 0
+    } match {
+      case Some(c) => c.newInstance().asInstanceOf[VT]
+
+      // There are some arguments, so take the first construtor, but the refobject must be set
+      case None if (refObject == None) =>
+        throw new RuntimeException(s"Cannot instantiate class $cl with non empty constructor and no reference object ")
+      case None =>
+
+        var ref = refObject.get 
+        
+        
+        println(s"Class needs constructor arguments, usign the first available constructor, tag is for " + tag.tpe.typeSymbol.name)
+        println(s"Type: " + tag.mirror.classSymbol(refObject.get.getClass).toType)
+        println(s"Type: " + idcompiler)
+
+        var constructor = cl.getConstructors()(0)
+        //var args = (0 until constructor.getParameterCount).map(i => null)
+
+        cl.getDeclaredFields.foreach {
+          f =>
+            println(s"Param: " + f.getName)
+        }
+
+        tag.mirror.classSymbol(refObject.get.getClass).toType.paramLists.foreach {
+          lst =>
+            lst.foreach {
+              s =>
+                println(s"Symbol c p:" + s.name)
+            }
+        }
+
+        // Find Constructor for current class
+        // Create Array for constructor
+
+        var args = tag.mirror.classSymbol(refObject.get.getClass).toType.members.collectFirst { case s if (s.name.toString == "<init>") => s.asMethod } match {
+          case Some(constructorMember) =>
+            println(s"Found Constructor")
+
+            var r = constructorMember.paramLists.flatten.map {
+              s =>
+                
+                // Take value from reference constructor
+                var m = ref.getClass.getMethod(s.name.toString)
+
+                println(s"Found parameter: " + s.name.toString() + " -> type" + tag.mirror.runtimeClass(s.typeSignature).asInstanceOf[Class[_]])
+
+                //tag.mirror.runtimeClass(s.typeSignature).cast()
+                try {
+                  var res = m.invoke(refObject.get)
+                  println(s"Reg content:" + res)
+                  res
+                } catch {
+                  case e =>
+                    e.printStackTrace()
+                    throw e
+                }
+
+            }
+            r.toArray
+
+          case None => Array[Any]()
+        }
+
+        println(s"Res args:" + args.length)
+
+        /*tag.tpe.members.foreach {
+          s => 
+          
+            
+            println(s"S: "+s.fullName+ "-> "+s.isConstructor)
+            if(s.isConstructor) {
+              println(s"--> ${s.asMethod.fullName}")
+              s.asMethod.paramLists.foreach {
+                lst => 
+                  lst.foreach {
+                    s => 
+                      println(s"Symbol c p:"+s.name)
+                  }
+              }
+            }
+           
+        }*/
+
+        args.zipWithIndex.foreach {
+          case (v, i) =>
+            println(s"Arg $i $v , required ${constructor.getParameters()(0)}")
+        }
+
+        constructor.newInstance(args(0).asInstanceOf[Object]).asInstanceOf[VT]
+
+    }
 
   }
 
@@ -444,7 +509,7 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
 
         } catch {
           case e: ClassNotFoundException =>
-            println(s"Could not find class")
+            println(s"Could not find class: $packageName.$targetName")
             Thread.currentThread.getContextClassLoader.asInstanceOf[URLClassLoader].getURLs.foreach {
               url =>
               //println(s"Available source: $url")

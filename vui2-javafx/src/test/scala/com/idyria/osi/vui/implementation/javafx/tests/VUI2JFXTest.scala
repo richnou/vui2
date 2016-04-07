@@ -11,7 +11,7 @@ object VUI2JFXTest extends App with VUIBuilder {
   println(s"Started JFX Test")
   //var f = frame
   
-  var view = BasicHTMLViewCompiler.createView(classOf[TryHTMLView])
+  var view = BasicHTMLViewCompiler.createView(None,classOf[TryHTMLView])
   
   JavaFXRun.onJavaFX {
     

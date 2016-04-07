@@ -45,6 +45,9 @@ $htmlScala apply {
             I           i
         
             P           {p}
+            Pre         {pre textContent/String}
+            Code        {code textContent/String}
+
             H1          {h1 textContent/String}
             H2          {h2 textContent/String}
             H3          {h3 textContent/String}
