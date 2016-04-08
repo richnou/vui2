@@ -36,7 +36,7 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
   var parentView: Option[AView[BT, _]] = None
 
   def getTopParentView = {
-    var currentView: AView[BT, _] = this
+    var currentView: AView[BT, _] = getProxy[AView[BT, _]].get
     while (currentView.parentView != None)
       currentView = currentView.parentView.get
 
@@ -61,6 +61,10 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
     }
     
   }
+  
+  // Classloader information
+  //---------------------
+  def getClassLoader = getClass.getClassLoader
 
   // Content/ Render
   //----------------
