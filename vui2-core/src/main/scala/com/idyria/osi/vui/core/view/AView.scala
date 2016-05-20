@@ -18,6 +18,8 @@ import com.idyria.osi.tea.compile.ClassDomainSupport
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 import com.idyria.osi.tea.errors.ErrorSupport
+import com.idyria.osi.tea.files.FileWatcherAdvanced
+import java.lang.ref.WeakReference
 
 /**
  *
@@ -26,8 +28,8 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
 
   // Recompilation interface
   //---------------
-  def replaceWith(v: Class[_ <: AView[BT, _ <: VUISGNode[BT, _]]]) = {
-    println(s"Requesting Change!")
+  def replaceWith(v: AView[BT, _ <: VUISGNode[BT, _]]) = {
+    logFine[AView[_,_]](s"Requesting Change!")
     this.@->("view.replace", v)
   }
 
@@ -42,26 +44,26 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
 
     currentView
   }
-  
+
   // Proxy
   //-----------------  
-  
-  var proxy : Option[_ <: AView[BT, _]] = None
-  
+
+  var proxy: Option[_ <: AView[BT, _]] = None
+
   /**
    * Returns the Proxy or itself if excluseSelf not set
    */
-  def getProxy[VT <: AView[BT, _]](implicit tag: ClassTag[VT]) : Option[VT] = {
-   
+  def getProxy[VT <: AView[BT, _]](implicit tag: ClassTag[VT]): Option[VT] = {
+
     proxy match {
       // Return proxy or self if it is the right type
-      case Some(proxied) if(tag.runtimeClass.isInstance(proxied)) => Some(proxied.asInstanceOf[VT])
+      case Some(proxied) if (tag.runtimeClass.isInstance(proxied)) => Some(proxied.asInstanceOf[VT])
       case None if (tag.runtimeClass.isInstance(this)) => Some(this.asInstanceOf[VT])
       case None => None
     }
-    
+
   }
-  
+
   // Classloader information
   //---------------------
   def getClassLoader = getClass.getClassLoader
@@ -106,11 +108,11 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
 
 }
 
-abstract class AViewCompiler2[T <: AView[_, _]] extends ClassDomainSupport {
+abstract class AViewCompiler2[T <: AView[_, _]] extends ClassDomainSupport with TLogSource {
 
 }
 
-class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDomainSupport {
+class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDomainSupport with TLogSource with ListeningSupport {
 
   implicit def viewToSGNode(v: AView[BT, _ <: VUISGNode[Any, _]]): VUISGNode[Any, _] = v.render
 
@@ -144,7 +146,7 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
   // Compiler Setup
   //---------------------
 
-  var fileWatcher = new FileWatcher
+  var fileWatcher = new FileWatcherAdvanced
   fileWatcher.start
 
   /**
@@ -180,12 +182,199 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
   //-----------------------
   //def getInstance(source:URL)
 
+  // Auto-Reload
+  //-------------------
+
+  /**
+   * Maps AutoReload Registered Class to list of objects which are waiting for a reload event
+   */
+  var autoReloadRegistration = Map[Class[_ <: T], List[WeakReference[_ <: T]]]()
+  var autoReloadActualClass = Map[Class[_ <: T],Class[_ <: T]]()
+  
+  def resetAutoReload = {
+    this.autoReloadRegistration = this.autoReloadRegistration.empty
+  }
+  /**
+   * Setup auto-reload for a class, make sure it is only triggered once
+   */
+  def autoReloadFor[VT <: T](cl: Class[VT])(implicit tag : TypeTag[VT]): Unit = {
+
+    autoReloadRegistration.get(cl) match {
+      case Some(reloadObjects) =>
+      case None =>
+        //-- Create File Name to look for
+        var targetClassFileName = cl.getCanonicalName.replace(".", File.separator) + ".scala"
+        var targetFile = new File(standardSearchPath, targetClassFileName)
+
+        logFine[AViewCompiler[_, _]](s"Looking for file: " + targetFile.getAbsolutePath + "-> " + targetFile.exists())
+
+        // Register AutoReload in Map to make sure this is not run anymore if the source is available or not 
+        //------------
+        this.autoReloadRegistration = autoReloadRegistration + (cl -> List[WeakReference[T]]())
+
+        // Look for Resolved target File
+        targetFile = targetFile.exists() match {
+          case false =>
+            cl.getClassLoader match {
+              case cl: URLClassLoader =>
+                //println(s"No File for class, but it is in a URL classloader, there is a change teh sources might not be local")
+
+                onLogFine[AViewCompiler[_, _]] {
+                  cl.getURLs.foreach {
+                    u =>
+                      logFine[AViewCompiler[_, _]](s"--- Available URL: -> $u -> ${u.getProtocol.startsWith("file")} && ${u.getPath} && ${new File(u.getPath).isDirectory()}")
+                  }
+                }
+
+                cl.getURLs.find { url => url.getProtocol.startsWith("file") && url.getPath.endsWith("classes/") && new File(url.getPath).isDirectory() } match {
+                  case Some(url) =>
+                    logFine[AViewCompiler[_, _]](s"--> Seems to be a good canditate -> " + url)
+
+                    //-- Search in target/classes/../../src/main/scala/path/to/class.scala
+                    var sourceFolderFile = new File(new File(url.getPath).getParentFile.getParentFile, List("src", "main", "scala").mkString(File.separator)).getAbsoluteFile
+
+                    var newFile = new File(sourceFolderFile, targetClassFileName).getAbsoluteFile
+                    //println(s"--> looking into $newFile")
+                    newFile.exists() match {
+                      case true =>
+                        var outputFolderFile =
+                          idcompiler.addSourceOutputFolders(sourceFolderFile -> new File(url.getPath))
+                        newFile
+                      case false => targetFile
+                    }
+
+                  case None =>
+                    targetFile
+                }
+              case _ =>
+                targetFile
+            }
+
+          case true => targetFile
+        }
+
+        //-- Target File for source
+        targetFile.exists() match {
+          case true =>
+
+            // Listen for File changes, recompile and save current View Class 
+            //  --> Then go to all registered views still there, and notify replace
+            //-------------------
+
+            /*this.withClassLoaderFor(cl) {
+          this.withURLInClassloader(this.outputClassesFolder.toURI().toURL) {
+
+            var viewClass = this.doCompile(targetFile.toURI().toURL())
+            var view = this.newInstance(refObject, viewClass.asInstanceOf[Class[VT]])*/
+
+            fileWatcher.onFileChange(this, targetFile) {
+              f =>
+                this.@->("reload")
+                try {
+                  logFine[AViewCompiler[_, _]](s"Recompiling ${targetFile.toURI().toURL()}")
+                  // Recompile
+                  this.withClassLoaderFor(cl) {
+                    this.withURLInClassloader(this.outputClassesFolder.toURI().toURL) {
+                      
+                      //-- Recompile
+                      var newClass = this.doCompile(targetFile.toURI().toURL()).asInstanceOf[Class[VT]]
+                      autoReloadActualClass = autoReloadActualClass + (cl -> newClass)
+                      
+                      //-- Go through all registered Objects
+                      logFine[AViewCompiler[_, _]](s"Replacing on objects")
+                      this.autoReloadRegistration.get(cl) match {
+                        case Some(list) =>
+                          list.filter { p => p.get!=null }.foreach {
+                            ref => 
+                              
+                              //-- Create new view 
+                             // var instance = this.newInstance[VT](Some(ref.get.asInstanceOf[VT]), newClass)
+                               var instance = this.createView(Some(ref.get.asInstanceOf[VT]), cl)
+                              ref.get.replaceWith(instance)
+                              
+                              //-- Clean old
+                              ref.get.@->("clean")
+                          }
+                        case None => 
+                      }
+                      
+                    }
+                  }
+
+                  // var newClass = this.doCompile(targetFile.toURI().toURL())
+
+                  // Save new class for cl in list
+                  logFine[AViewCompiler[_, _]](s"Recompiled ${targetFile.toURI().toURL()}")
+
+                  // Update registered views
+
+                  // Update view and remove it from listener too
+                  //view.replaceWith(newClass.asInstanceOf[Class[T]])
+
+                } catch {
+                  case e: Throwable =>
+                    e.printStackTrace()
+                }
+            }
+          // }
+
+          //}
+          //}
+
+          case false =>
+            logFine[AViewCompiler[_, _]](s"--> Cannot find file for class $cl")
+          //this.newInstance(refObject, cl)
+        }
+    }
+
+  }
+
+  /**
+   * When the class for the view is reloaded, a replace event is triggered on the view
+   */
+  def registerView[VT <: T](view: VT)(implicit tag : TypeTag[VT]): VT = {
+
+    //-- Register Class
+    autoReloadFor[VT](view.getClass.asInstanceOf[Class[VT]])(tag)
+    
+    //-- Add to reload list 
+    this.autoReloadRegistration.get(view.getClass) match {
+      case Some(registeredObjects) if (registeredObjects.find { p => p.get!=null && p==view }.isEmpty) => 
+        var newRegistered = registeredObjects.filter(_.get!=null) :+ new WeakReference(view)
+        
+        // Clean
+        view.on("clean") {
+          //println(s"Cleaning from registration")
+          this.autoReloadRegistration = this.autoReloadRegistration + (view.getClass -> autoReloadRegistration(view.getClass).filter { p => p.get!=null && p.get!=view})
+        }
+        this.autoReloadRegistration = this.autoReloadRegistration + (view.getClass -> newRegistered)
+      case _ => 
+    }
+    
+    view
+  }
+
   // Magic Compilation Find
   //--------------------
   var standardSearchPath = new File("src/main/scala")
 
   def createView[VT <: T](refObject: Option[VT], cl: Class[VT], listen: Boolean = true)(implicit tag: TypeTag[VT]): VT = {
 
+    //-- Register
+    autoReloadFor(cl)
+    
+    //-- Compile && Create instance
+    var instance = this.newInstance(refObject, cl)
+    
+    //-- Register object for reload
+    this.registerView(instance)
+    
+    //-- Return
+    instance
+    
+    
+    /*
+    
     var targetClassFileName = cl.getCanonicalName.replace(".", File.separator) + ".scala"
     var targetFile = new File(standardSearchPath, targetClassFileName)
 
@@ -195,21 +384,21 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
       case false =>
         cl.getClassLoader match {
           case cl: URLClassLoader =>
-            println(s"No File for class, but it is in a URL classloader, there is a change teh sources might not be local")
+            //println(s"No File for class, but it is in a URL classloader, there is a change teh sources might not be local")
             cl.getURLs.foreach {
               u =>
-                println(s"--- Available URL: -> $u -> ${u.getProtocol.startsWith("file")} && ${u.getPath} && ${new File(u.getPath).isDirectory()}")
+              // println(s"--- Available URL: -> $u -> ${u.getProtocol.startsWith("file")} && ${u.getPath} && ${new File(u.getPath).isDirectory()}")
             }
 
             cl.getURLs.find { url => url.getProtocol.startsWith("file") && url.getPath.endsWith("classes/") && new File(url.getPath).isDirectory() } match {
               case Some(url) =>
-                println(s"--> Seems to be a good canditate -> " + url)
+                //println(s"--> Seems to be a good canditate -> " + url)
 
                 //-- Search in target/classes/../../src/main/scala/path/to/class.scala
                 var sourceFolderFile = new File(new File(url.getPath).getParentFile.getParentFile, List("src", "main", "scala").mkString(File.separator)).getAbsoluteFile
 
                 var newFile = new File(sourceFolderFile, targetClassFileName).getAbsoluteFile
-                println(s"--> looking into $newFile")
+                //println(s"--> looking into $newFile")
                 newFile.exists() match {
                   case true =>
                     var outputFolderFile =
@@ -228,6 +417,7 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
       case true => targetFile
     }
 
+    //-- Target File for source
     targetFile.exists() match {
       case true =>
 
@@ -243,21 +433,24 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
             // Set for change watch
             if (listen) {
 
-              fileWatcher.onFileChange(targetFile) {
-                try {
+              //-- Watch the file with source Listener being this compiler
+              //-- Clean all listener for this file and this compiler, to avoid useless reload
+              fileWatcher.onFileChange(this, targetFile) {
+                f =>
+                  try {
 
-                  // Recompile
-                  this.withClassLoaderFor(viewClass) {
-                    var newClass = this.doCompile(targetFile.toURI().toURL())
+                    // Recompile
+                    this.withClassLoaderFor(viewClass) {
+                      var newClass = this.doCompile(targetFile.toURI().toURL())
 
-                    // Update
-                    view.replaceWith(newClass.asInstanceOf[Class[T]])
+                      // Update view and remove it from listener too
+                      view.replaceWith(newClass.asInstanceOf[Class[T]])
+                    }
+
+                  } catch {
+                    case e: Throwable =>
+                      e.printStackTrace()
                   }
-
-                } catch {
-                  case e: Throwable =>
-                    e.printStackTrace()
-                }
               }
             }
 
@@ -271,7 +464,7 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
     /*} finally {
       Thread.currentThread().setContextClassLoader(startTHCL)
     }*/
-
+*/
   }
 
   def newInstance[VT <: T](refObject: Option[VT], cl: Class[VT])(implicit tag: TypeTag[VT]): VT = {
@@ -289,9 +482,8 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
         throw new RuntimeException(s"Cannot instantiate class $cl with non empty constructor and no reference object ")
       case None =>
 
-        var ref = refObject.get 
-        
-        
+        var ref = refObject.get
+
         println(s"Class needs constructor arguments, usign the first available constructor, tag is for " + tag.tpe.typeSymbol.name)
         println(s"Type: " + tag.mirror.classSymbol(refObject.get.getClass).toType)
         println(s"Type: " + idcompiler)
@@ -321,7 +513,7 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
 
             var r = constructorMember.paramLists.flatten.map {
               s =>
-                
+
                 // Take value from reference constructor
                 var m = ref.getClass.getMethod(s.name.toString)
 
@@ -409,6 +601,9 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
     // If the file ends with Scala, assume it is complete
     //-----------------------------
     var fpath = source.getPath
+    
+    logFine[AViewCompiler[_,_]](s"Compiling $fpath")
+    
     var fileToCompile = fpath match {
 
       //-- File is ready, just read content, and replace class name with target name
@@ -420,8 +615,10 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
         // Get Class Name
         var typeName = """class ([\w0-9_]+)""".r.findFirstMatchIn(content).get.group(1)
 
+        logFine[AViewCompiler[_,_]](s"Compiling $path , type=$typeName")
+        
         // Replace 
-        var newContent = content.replaceAll(s"""^?$typeName(\\s|\\.)""", targetName + "$1")
+        var newContent = content.replaceAll(s"""^?$typeName(\\s|\\.)?""", targetName + "$1")
         //var newContent = content.replaceFirst("""class ([\w0-9_]+) """,s"class $targetName ")
         // newContent = content.replaceFirst("""object ([\w0-9_]+) """,s"object $targetName ")
 
@@ -481,11 +678,11 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
     /*logFine[AView[T]](s"VIEW IS AT: "+source.getPath)
     var targetName = source.getPath.split("/").last.replace(".", "_")*/
 
-    println(s"***** Settings: " + idcompiler.settings2.hashCode())
+    logFine[AViewCompiler[_,_]](s"***** Settings: " + idcompiler.settings2.hashCode())
 
     //compiler.settings2.outputDirs.
     //compiler.settings2.outputDirs.add(this.tempSourceFolder.getAbsolutePath, this.outputClassesFolder.getAbsolutePath)
-    println(s"WWWCompiler for $source => ${idcompiler.settings2.outputDirs.outputs}")
+    logFine[AViewCompiler[_,_]](s"WWWCompiler for $source => ${idcompiler.settings2.outputDirs.outputs}")
 
     //var cl = new URLClassLoader(Array[URL]())
 
@@ -498,22 +695,22 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
 
     this.idcompiler.compileFiles(Seq(fileToCompile)) match {
       case Some(error) =>
-        println(s"Error: " + error.message);
+        logFine[AViewCompiler[_,_]](s"Error: " + error.message);
         throw new RuntimeException(s"Failed for $source : " + error.message.toString())
       case None =>
-        println(s"Success by compile")
+        logFine[AViewCompiler[_,_]](s"Success by compile")
 
         try {
           var resClass = Thread.currentThread.getContextClassLoader.loadClass(s"$packageName.$targetName")
 
           //resClass.asSubclass(Thread.currentThread.getContextClassLoader.loadClass(T))
-          println(s"ResClass SuperClass: " + resClass.getSuperclass.getCanonicalName)
+          logFine[AViewCompiler[_,_]](s"ResClass SuperClass: " + resClass.getSuperclass.getCanonicalName)
           //resClass.newInstance().asInstanceOf[T]
           resClass.asInstanceOf[Class[T]]
 
         } catch {
           case e: ClassNotFoundException =>
-            println(s"Could not find class: $packageName.$targetName")
+            logFine[AViewCompiler[_,_]](s"Could not find class: $packageName.$targetName")
             Thread.currentThread.getContextClassLoader.asInstanceOf[URLClassLoader].getURLs.foreach {
               url =>
               //println(s"Available source: $url")
