@@ -317,7 +317,7 @@ package com.idyria.osi.vui.html
 
     s"""
 ${indentString.mkString}<$nodeName$attrs>
-${indentString.mkString}    ${textContent}
+${textContent}
 ${indentString.mkString}${this.children.map(_.toString).mkString("\n\n")}
 ${indentString.mkString}</$nodeName>
     """

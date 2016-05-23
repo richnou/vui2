@@ -71,7 +71,10 @@ $htmlScala apply {
             Option      {option value/String}
             Button      {button textContent/String}
         
-            Wrapper     {wrapper textContent/String}
+         
+            Canvas      canvas
+
+	    Wrapper     {wrapper textContent/String}
             
             
 

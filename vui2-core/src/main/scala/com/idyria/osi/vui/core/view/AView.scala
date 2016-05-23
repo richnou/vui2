@@ -45,6 +45,21 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
     currentView
   }
 
+  def getParentViews = {
+    
+    var res =  List[AView[BT, _]]()
+    var currentView: AView[BT, _] = getProxy[AView[BT, _]].get
+    res = res :+ currentView
+    while (currentView.parentView != None) {
+      currentView = currentView.parentView.get
+      res = res :+ currentView
+    }
+      
+
+    currentView
+    res.reverse
+  }
+  
   // Proxy
   //-----------------  
 
@@ -202,6 +217,9 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
     autoReloadRegistration.get(cl) match {
       case Some(reloadObjects) =>
       case None =>
+        
+        
+        
         //-- Create File Name to look for
         var targetClassFileName = cl.getCanonicalName.replace(".", File.separator) + ".scala"
         var targetFile = new File(standardSearchPath, targetClassFileName)
@@ -211,7 +229,8 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
         // Register AutoReload in Map to make sure this is not run anymore if the source is available or not 
         //------------
         this.autoReloadRegistration = autoReloadRegistration + (cl -> List[WeakReference[T]]())
-
+        this.autoReloadActualClass = this.autoReloadActualClass + (cl -> cl)
+        
         // Look for Resolved target File
         targetFile = targetFile.exists() match {
           case false =>
@@ -281,11 +300,13 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
                       autoReloadActualClass = autoReloadActualClass + (cl -> newClass)
                       
                       //-- Go through all registered Objects
-                      logFine[AViewCompiler[_, _]](s"Replacing on objects")
+                      logFine[AViewCompiler[_, _]](s"Replacing on objects: ")
                       this.autoReloadRegistration.get(cl) match {
                         case Some(list) =>
                           list.filter { p => p.get!=null }.foreach {
                             ref => 
+                              
+                               logFine[AViewCompiler[_, _]](s"Replacing on object ")
                               
                               //-- Create new view 
                              // var instance = this.newInstance[VT](Some(ref.get.asInstanceOf[VT]), newClass)
@@ -297,6 +318,7 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
                           }
                         case None => 
                       }
+                      logFine[AViewCompiler[_, _]](s"Done")
                       
                     }
                   }
@@ -332,22 +354,22 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
   /**
    * When the class for the view is reloaded, a replace event is triggered on the view
    */
-  def registerView[VT <: T](view: VT)(implicit tag : TypeTag[VT]): VT = {
+  def registerView[VT <: T](cl: Class[VT],view: VT): VT = {
 
     //-- Register Class
-    autoReloadFor[VT](view.getClass.asInstanceOf[Class[VT]])(tag)
+    //autoReloadFor[VT](view.getClass.asInstanceOf[Class[VT]])(tag)
     
     //-- Add to reload list 
-    this.autoReloadRegistration.get(view.getClass) match {
+    this.autoReloadRegistration.get(cl) match {
       case Some(registeredObjects) if (registeredObjects.find { p => p.get!=null && p==view }.isEmpty) => 
         var newRegistered = registeredObjects.filter(_.get!=null) :+ new WeakReference(view)
         
         // Clean
         view.on("clean") {
           //println(s"Cleaning from registration")
-          this.autoReloadRegistration = this.autoReloadRegistration + (view.getClass -> autoReloadRegistration(view.getClass).filter { p => p.get!=null && p.get!=view})
+          this.autoReloadRegistration = this.autoReloadRegistration + (cl -> autoReloadRegistration(cl).filter { p => p.get!=null && p.get!=view})
         }
-        this.autoReloadRegistration = this.autoReloadRegistration + (view.getClass -> newRegistered)
+        this.autoReloadRegistration = this.autoReloadRegistration + (cl -> newRegistered)
       case _ => 
     }
     
@@ -358,16 +380,19 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
   //--------------------
   var standardSearchPath = new File("src/main/scala")
 
+  /**
+   * 
+   */
   def createView[VT <: T](refObject: Option[VT], cl: Class[VT], listen: Boolean = true)(implicit tag: TypeTag[VT]): VT = {
 
     //-- Register
     autoReloadFor(cl)
     
     //-- Compile && Create instance
-    var instance = this.newInstance(refObject, cl)
+    var instance = this.newInstance(refObject, this.autoReloadActualClass(cl).asInstanceOf[Class[VT]])
     
     //-- Register object for reload
-    this.registerView(instance)
+    this.registerView(cl,instance)
     
     //-- Return
     instance

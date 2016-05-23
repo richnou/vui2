@@ -74,7 +74,7 @@ class AViewAutoReloadTest extends FunSuite with GivenWhenThen with BeforeAndAfte
 
     Given("A Base Object")
     When("Registered for Autoreload")
-    compiler.registerView(view)
+    compiler.registerView(classOf[TestViewBaseClass],view)
     Then("Compiler registration list is not empty")
     assertResult(view)(compiler.autoReloadRegistration.get(view.getClass).get.head.get)
 
@@ -91,7 +91,7 @@ class AViewAutoReloadTest extends FunSuite with GivenWhenThen with BeforeAndAfte
       v:AView[_, _] =>
         reloadCount += 1
     }
-    compiler.registerView(view2)
+    compiler.registerView(classOf[TestViewBaseClass],view2)
     Thread.sleep(100)
     targetFile.setLastModified(System.currentTimeMillis())
     Thread.sleep(500)
