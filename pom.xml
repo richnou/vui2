@@ -151,6 +151,44 @@
 			</plugin>
 		</plugins>
 	</build>
+	<profiles>
+	  <profile>
+	  	<id>native-build</id>
+	    <activation>
+	      <os>
+	        <family>unix</family> 
+      	   </os>
+      	   <file>
+      	   		<exists>src/gen/build.sh</exists>
+      	   </file>
+	    </activation>
+	    <build>
+		    <plugins>
+		   <!-- This configures compilation for special tricky /dev/pmap buffer allocation -->
+				<plugin>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>generate-sources</id>
+							<phase>generate-sources</phase>
+							<configuration>
+								<tasks>
+									
+	                                <exec executable="/bin/bash"> 
+	                                    <arg value="src/gen/build.sh"></arg> 
+	                               </exec> 
+								</tasks>
+							</configuration>
+							<goals>
+								<goal>run</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</build>
+	  </profile>
+	</profiles>
 
 	<!-- Repositories to find packages -->
 	<!-- ############################################## -->
