@@ -310,10 +310,11 @@ package com.idyria.osi.vui.html
     //-------------------------
     var attrs = attributes.size match { case 0 => "" case _ => attributes.map { t => s"""${t._1}="${t._2}" """.trim }.mkString(" ", " ", "") }
 
-    var indentString = this.indentCount match {
+    /*var indentString = this.indentCount match {
       case 0 => List("")
       case indentCount => for (i <- 1 to indentCount) yield "    "
-    }
+    }*/
+    var indentString = ""
 
     s"""
 ${indentString.mkString}<$nodeName$attrs>
