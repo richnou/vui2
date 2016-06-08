@@ -7,6 +7,7 @@ import java.net.URL
 import com.idyria.osi.vui.html.Wrapper
 import java.net.URI
 import com.idyria.osi.vui.html.Script
+import com.idyria.osi.vui.html.Div
 
 trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   
@@ -67,6 +68,17 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     resScript.textContent = s*/
   }
   
+  
+  // Auto Converts
+  //-------------------
+  implicit def strToDiv(str:String) : Div[HTMLElement,Div[HTMLElement,_]] = {
+    
+    var d = div {
+      textContent(str)
+    }
+    
+    d
+  }
   
   
 }
