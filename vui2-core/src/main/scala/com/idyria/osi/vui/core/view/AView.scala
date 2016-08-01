@@ -25,11 +25,21 @@ import java.lang.ref.WeakReference
  */
 class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport with ErrorSupport {
 
-  // Recompilation interface
+  // Recompilation interface/ Lifecylce
   //---------------
   def replaceWith(v: AView[BT, _ <: VUISGNode[BT, _]]) = {
     logFine[AView[_, _]](s"Requesting Change!")
     this.@->("view.replace", v)
+  }
+  
+  def closeView = {
+    @->("close")
+  }
+  
+  def onClose(cl: => Unit) = {
+    this.on("close") {
+      cl
+    }
   }
 
   // Tree
