@@ -308,7 +308,15 @@ package com.idyria.osi.vui.html
 
     // Prepare attributes
     //-------------------------
-    var attrs = attributes.size match { case 0 => "" case _ => attributes.map { t => s"""${t._1}="${t._2}" """.trim }.mkString(" ", " ", "") }
+    var attrs = attributes.size match { case 0 => "" case _ => attributes.map { 
+      
+      // If Value contains " then use '' as outside delimiter
+      case (name,value) if (value.toString.contains('"')) => 
+         s"""${name}='${value}'""".trim 
+      case t => 
+        s"""${t._1}="${t._2}"""".trim 
+      
+    }.mkString(" ", " ", "") }
 
     /*var indentString = this.indentCount match {
       case 0 => List("")

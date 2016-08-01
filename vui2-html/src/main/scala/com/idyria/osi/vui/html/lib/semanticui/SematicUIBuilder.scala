@@ -5,18 +5,19 @@ import org.w3c.dom.html.HTMLElement
 import java.net.URL
 import java.net.URI
 
-trait SemanticUIBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
+trait SemanticUIBuilder  {
 
   // Config
   //---------------
   var semanticUIVersion = "2.1.4"
+  var semanticBasePath = "modules/wwwui/semantic"
   
   // Module usage
   //----------------------
 
   // Building
   //--------------------
-  override def html(cl: => Any) = {
+  /*override def html(cl: => Any) = {
     super.html {
 
       head {
@@ -24,19 +25,20 @@ trait SemanticUIBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
         }
 
-        /*script(getClass.getClassLoader.getResource("semantic/dist/semantic.min.js"), "text/javascript") {
+        script(cre) {
 
         }
 
         stylesheet(getClass.getClassLoader.getResource("semantic/dist/semantic.min.css")) {
 
-        }*/
+        }
       }
 
       cl
 
     }
-  }
+  }*/
+  
   /* override def html(cl: => Any): Html = {
     super.html {
 
