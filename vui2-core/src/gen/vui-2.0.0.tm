@@ -29,7 +29,7 @@ namespace eval vui::core {
             }
         }
 
-        :set name {
+        :pset name {
 
             +exportToPublic
 
@@ -54,12 +54,18 @@ namespace eval vui::core {
                 }
 
                 +method onMap {name cl} {
+                
                     set existing [lsearch -exact ${:languageMap} $cl]
+                    
                     if {$existing==-1} {
+                    
                         lappend :languageMap $name [list $cl]
+                        
                     } else {
+                    
                         set :languageMap [lreplace ${:languageMap} $existing $existing [concat [lindex ${:languageMap} existing] [list $cl]]]
                     }
+                    
                 }
 
                 +method getOnMap name {
@@ -88,7 +94,7 @@ namespace eval vui::core {
                     set scala [[:parent] map {
 
                         #puts "Scal MAp main node is [$node info class]"
-                        if {[$node isClass vui::core::Set]} {
+                        if {[$node isClass vui::core::Pset]} {
                             return [scala::package com.idyria.osi.vui.implementation.[string tolower [$impl name get]]]
                         } elseif {[$node isClass vui::core::Component] && [$node shade vui::core::Component isLeaf]} {
 
@@ -154,7 +160,7 @@ namespace eval vui::core {
 
                 set vuiScalaPackage [:map {
 
-                    if {[$node isClass vui::core::Set]} {
+                    if {[$node isClass vui::core::Pset]} {
                         
                         puts "Creating package for [$node name get]"
                         return [scala::package [$node name get]]

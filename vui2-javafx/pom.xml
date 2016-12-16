@@ -145,5 +145,10 @@
 			<artifactId>aib-core</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>edu.kit.ipe.adl.indesign</groupId>
+			<artifactId>indesign-core</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>

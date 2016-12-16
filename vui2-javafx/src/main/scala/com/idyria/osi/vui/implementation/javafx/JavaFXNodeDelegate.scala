@@ -123,7 +123,19 @@ class JavaFXNodeDelegate[DT <: Node,+Self](var delegate: DT) extends VUIComponen
       }
     })
 
-  } /*delegate.addMouseListener(new MouseAdapter() {
+  } 
+   
+   override def onClick(action:  => Any) = {
+
+    delegate.setOnMouseClicked(new EventHandler[MouseEvent] {
+      def handle(event: MouseEvent) = {
+        action
+      }
+    })
+
+  }
+   
+   /*delegate.addMouseListener(new MouseAdapter() {
    
     /*override def mouseClicked(e: MouseEvent) = SwingUtilities.invokeLater(new Runnable {
 

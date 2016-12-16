@@ -1,28 +1,30 @@
 
 
 package com.idyria.osi.vui.html
- 
- class HTMLNode[HT <: org.w3c.dom.html.HTMLElement,+Self]( var nodeName : String  ) extends com.idyria.osi.vui.core.definitions.VUIComponent[HT,Self]  {
 
-    this:Self => 
+class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) extends com.idyria.osi.vui.core.definitions.VUIComponent[HT, Self] {
 
+  this: Self =>
 
-    // Class Fields 
-    //---------------------
-    
+  // Selector 
+  //----------------
+  def select(selector: String): scala.Option[HTMLNode[HT, HTMLNode[HT, _]]] = {
+    None
+  }
 
-    // Init Section 
-    //----------------------
-    
+  // Class Fields 
+  //---------------------
 
-    // Methods
-    //------------------
-    
+  // Init Section 
+  //----------------------
 
-    // Imported Content 
-    //----------------------
-    // Imported from E:/Common/Projects/git/vui2/vui2-html/src/gen/HTMLNode.body.scala
- // DOM Base
+  // Methods
+  //------------------
+
+  // Imported Content 
+  //----------------------
+  // Imported from E:/Common/Projects/git/vui2/vui2-html/src/gen/HTMLNode.body.scala
+  // DOM Base
   //--------------------
   var delegate: HT = _
   def base = delegate
@@ -33,7 +35,7 @@ package com.idyria.osi.vui.html
   override def clear = {
     super.clear
     //println(s"Delegate is :$this.delegate")
-    this.attributes =  Map[String, Any]()
+    this.attributes = Map[String, Any]()
     this.delegate match {
       case null =>
       case d =>
@@ -45,7 +47,7 @@ package com.idyria.osi.vui.html
         }
     }
   }
-  
+
   def clearChildren = {
     super.clear
     //println(s"Delegate is :$this.delegate")
@@ -220,8 +222,8 @@ package com.idyria.osi.vui.html
         this.attributes = attributes + attr
 
       case true =>
-       this.attributes = attributes - attr._1
-       this.attributes = attributes + attr
+        this.attributes = attributes - attr._1
+        this.attributes = attributes + attr
     }
 
   }
@@ -229,12 +231,12 @@ package com.idyria.osi.vui.html
 
     this(attr)
   }
-  
+
   def ++@(attr: (String, Any)) = {
 
-     attributeAppend((attr._1,attr._2.toString))
+    attributeAppend((attr._1, attr._2.toString))
   }
-  
+
   def attributeAppend(attr: (String, String)) = {
 
     this.attributes.get(attr._1) match {
@@ -248,9 +250,9 @@ package com.idyria.osi.vui.html
     }
 
   }
-  
-  def attribute(name:String) = {
-  	this.attributes.get(name) match {
+
+  def attribute(name: String) = {
+    this.attributes.get(name) match {
       case None =>
 
         ""
@@ -260,9 +262,9 @@ package com.idyria.osi.vui.html
         actualValue.toString
     }
   }
-  
-  def attributeOption(name:String) = {
-  	this.attributes.get(name)
+
+  def attributeOption(name: String) = {
+    this.attributes.get(name)
   }
 
   /**
@@ -308,15 +310,17 @@ package com.idyria.osi.vui.html
 
     // Prepare attributes
     //-------------------------
-    var attrs = attributes.size match { case 0 => "" case _ => attributes.map { 
-      
-      // If Value contains " then use '' as outside delimiter
-      case (name,value) if (value.toString.contains('"')) => 
-         s"""${name}='${value}'""".trim 
-      case t => 
-        s"""${t._1}="${t._2}"""".trim 
-      
-    }.mkString(" ", " ", "") }
+    var attrs = attributes.size match {
+      case 0 => "" case _ => attributes.map {
+
+        // If Value contains " then use '' as outside delimiter
+        case (name, value) if (value.toString.contains('"')) =>
+          s"""${name}='${value}'""".trim
+        case t =>
+          s"""${t._1}="${t._2}"""".trim
+
+      }.mkString(" ", " ", "")
+    }
 
     /*var indentString = this.indentCount match {
       case 0 => List("")
@@ -341,15 +345,14 @@ ${indentString.mkString}</$nodeName>
   def onLoad(cl: Any => Any): Unit = {
 
   }
-  
+
   def doClick = {
   }
-  
+
   // Content Update API
   //--------------------
   def updateContent = {
   }
-
 
 }
 

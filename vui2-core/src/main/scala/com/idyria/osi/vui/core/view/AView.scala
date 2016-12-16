@@ -128,6 +128,8 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
     this.renderedNode = None
     this.render
   }
+  
+  
 
 }
 

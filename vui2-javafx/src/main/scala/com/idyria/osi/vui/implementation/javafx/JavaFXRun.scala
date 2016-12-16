@@ -13,9 +13,10 @@ class JavaFXRun extends Application {
   var cl: () => Unit = { () => }
 
   def start(stage: Stage) = {
+    //Platform.setImplicitExit(false)
     JavaFXRun.application = this
     stage.close()
-    cl()
+    // cl()
 
     // Select VUI implementation for JFX thread
     //---------------
@@ -35,17 +36,46 @@ object JavaFXRun {
   var started = false
   var applicationThread: Option[Thread] = None
 
+  
+  def stopAll = {
+    Platform.setImplicitExit(true)
+    Platform.exit()
+  }
+  def noImplicitExit = Platform.setImplicitExit(false)
+
   VUIFactory.setImplementationForCurrentThread(new JFXFinalFactory)
   VUIFactory.defaultImplementation = Some(new JFXFinalFactory)
+
+  def waitStarted = started match {
+    case true =>
+
+    case false =>
+
+      var fxThread = new Thread(new Runnable() {
+        def run = {
+
+          try { Application.launch(classOf[JavaFXRun]) } finally {}
+
+        }
+      })
+      fxThread.start()
+
+      semaphore.acquire()
+      started = true;
+
+  }
 
   def onJavaFX[T](cl: => T): Option[T] = {
 
     started match {
       case true =>
 
+        //println(s"Started, trying on JFX Thread")
+
         var r: Option[T] = None
         Platform.runLater(new Runnable() {
           def run = {
+           // println(s"Running on JFX Platform")
             try { r = Some(cl) } finally { semaphore.release }
 
           }
@@ -69,18 +99,9 @@ object JavaFXRun {
         semaphore.acquire()*/
 
         // Our Main app does release a credit in the semaphore
-        var fxThread = new Thread(new Runnable() {
-          def run = {
+        waitStarted
 
-            try { Application.launch(classOf[JavaFXRun]) } finally {}
-
-          }
-        })
-        fxThread.start()
-
-        semaphore.acquire()
-
-        started = true;
+        
         var r: Option[T] = None
         Platform.runLater(new Runnable {
 

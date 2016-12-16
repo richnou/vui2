@@ -6,7 +6,7 @@ source $loc/../../../vui2-core/src/gen/vui_defs.tcl
 
 ## Create HTML VUI set 
 ############################
-set htmlImpl [vui::core::set com.idyria.osi.vui.html {
+set htmlImpl [vui::core::pset com.idyria.osi.vui.html {
 
 
     ##:implementation Button -> Button {
@@ -62,6 +62,7 @@ $htmlScala apply {
             Tr          tr
             Td          {td textContent/String}
             Tfoot       tfoot 
+            Caption     caption
         
             Label       {label textContent/String}
             
@@ -70,6 +71,7 @@ $htmlScala apply {
             Select      select
             Option      {option value/String}
             Button      {button textContent/String}
+            Textarea    textarea
         
          
             Canvas      canvas
@@ -531,12 +533,12 @@ $htmlScala apply {
             }
             
             ## Generic Attribute
-            :def ++@ {attr/(String,String)} = {
+            :def ++@ {attr/(String,Any)} = {
               currentNode.++@(attr)
             }
             
             ## Generic Attribute
-            :def +@ {attr/(String,String)} = {
+            :def +@ {attr/(String,Any)} = {
                 currentNode.+@(attr)
             }            
             

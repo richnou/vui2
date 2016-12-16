@@ -175,6 +175,7 @@ namespace eval scala {
                 +var returnType "-"
                 +var body       ""
                 +var override   false
+                
 
                 :argumentSet {
                     :argument name {
@@ -617,7 +618,7 @@ package <% return [:shade scala::Package formatHierarchyString {return [$it name
 
             set override [expr [$it override get]==true ? "{override }" : "{}"]
             
-            if {[$it body get]=="{}"} {
+            if {[$it body get]==""} {
 
                 return "${override}def [$it name get]$argumentSetsString $returnType"
              } else {

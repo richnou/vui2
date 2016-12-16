@@ -1,20 +1,54 @@
 package com.idyria.osi.vui.html.basic
 
-import org.w3c.dom.html.HTMLElement
-import com.idyria.osi.vui.html.HTMLNode
-import scala.xml.Elem
-import java.net.URL
-import com.idyria.osi.vui.html.Wrapper
 import java.net.URI
-import com.idyria.osi.vui.html.Script
+
+import scala.xml.Elem
+
+import org.w3c.dom.html.HTMLElement
+
 import com.idyria.osi.vui.html.Div
+import com.idyria.osi.vui.html.HTMLNode
+import com.idyria.osi.vui.html.Input
+import com.idyria.osi.vui.html.Label
 import com.idyria.osi.vui.html.P
+import com.idyria.osi.vui.html.Script
+import com.idyria.osi.vui.html.Span
+import com.idyria.osi.vui.html.Td
 import com.idyria.osi.vui.html.Thead
+import com.idyria.osi.vui.html.Tr
+import com.idyria.osi.vui.html.Wrapper
+import com.idyria.osi.vui.html.xml.XMLHTMLNode
+import com.idyria.osi.vui.html.TextNode
 
 trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
+  // Parts
+  //---------------
+  // Placeholder
+  //--------------
+  var placesMap = Map[String,() => HTMLNode[HTMLElement,_]]()
+  
+  def placePart(id:String)  = {
+    placesMap.get(id) match {
+      case Some(cl) => 
+       switchToNode(cl(),{})
+        
+      case None => 
+        
+        throw new RuntimeException("Cannot place part: "+id+" because it hasn't been defined")
+    }
+  }
+  
+  def definePart(id:String)(cl: =>HTMLNode[HTMLElement,_]) {
+    placesMap = placesMap + (id ->{ () =>  cl })
+  }
+  
+  
+  
+  
   // Content API
   //----------------
+
   def content(cl: => Any) = {
 
     //--
@@ -22,20 +56,122 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   }
 
+  /**
+   * Adds an attribute only if #test is true
+   * Useful for attributes like "selected" or "checked" which are active on presence not value
+   */
+  def attributeOnTrue(test: Boolean, attributeName: String) = {
+    if (test) {
+      +@(attributeName -> "")
+    }
+
+  }
+  
+  // Text
+  //--------------
+  def span(str:String) :  Span[HTMLElement, Span[HTMLElement, _]] = {
+      span {
+        textContent(str)
+      }
+  }
+  def p(str:String) :  P[HTMLElement, P[HTMLElement, _]] = {
+      p {
+        textContent(str)
+      }
+  }
+  
+
+  // Forms
+  //--------------------
+
+  override def label(str: String)(cl: => Any): Label[HTMLElement, Label[HTMLElement, _]] = {
+
+    // Create
+    //--------------------
+    val labelElement = this.createLabel(str)
+
+    // Run closure
+    switchToNode(labelElement, cl)
+
+    // Special Features:
+    //-----------
+
+    //-- If an input element is present as child, remove it and add to current node
+    labelElement.children.collect { case node if (node.isInstanceOf[Input[HTMLElement, _]]) => node.asInstanceOf[Input[HTMLElement, _]] }.foreach {
+      inputElement =>
+
+        // Detach and readd
+        inputElement.detach
+        switchToNode(inputElement, {})
+
+        // If input Element has an ID, and for none, use it on for
+        (inputElement.attributeOption("id"),labelElement.attributeOption("id")) match {
+          case (Some(id),None) =>
+            +@("for" -> id.toString())
+          case _ =>
+        }
+    }
+
+    labelElement
+  }
+
+  /**
+   * Improve input element to allow non valid HTML constructs
+   */
+  override def input(cl: => Any): Input[HTMLElement, Input[HTMLElement, _]] = {
+
+    // Create
+    //--------------------
+    val inputElement = this.createInput
+
+    // Run closure
+    switchToNode(inputElement, cl)
+
+    // Add special Features like Label adjustment
+    //-------------------------
+
+    //---- Labels
+    inputElement.children.find(node => node.isInstanceOf[Label[HTMLElement, _]]) match {
+      case Some(label) =>
+
+        // Move to label input container
+        // Move Label before input element by removing input, then readd it after label
+        // Use input ID for "for" attribute
+        inputElement.detach
+        move(label.asInstanceOf[HTMLNode[HTMLElement, _]]) {
+
+          inputElement.attributeOption("id") match {
+            case Some(id) =>
+              +@("for" -> id.toString())
+            case None =>
+          }
+        }
+        switchToNode(inputElement, {})
+
+      case None =>
+    }
+
+    inputElement
+
+  }
+
   // Import XML Parsed Stuff
   //----------
   def importHTML(xml: Elem) = {
 
-    wrapper(xml.toString()) {
-
-    }
+    switchToNode(new XMLHTMLNode[HTMLElement, XMLHTMLNode[HTMLElement, _]](xml),{})
   }
 
-  def $(xml: Elem): Wrapper[HTMLElement, Wrapper[HTMLElement, _]] = importHTML(xml)
-  def $(str: String): P[HTMLElement, _] = {
-    p {
-      textContent(str)
-    }
+  def $(xml: Elem)(cl: => Any): XMLHTMLNode[HTMLElement, XMLHTMLNode[HTMLElement, _]] = {
+    switchToNode(new XMLHTMLNode[HTMLElement, XMLHTMLNode[HTMLElement, _]](xml),cl)
+  }
+  
+  
+  /**
+   * Selector
+   */
+  def $(selector:String): Option[HTMLNode[HTMLElement,HTMLNode[_,_]]] = {
+    currentNode.select(selector)
   }
   /*def +(xml:Elem) = {
     
@@ -72,6 +208,14 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     resScript.textContent = s*/
   }
 
+  // Text
+  //--------------
+  def text(str:String) = {
+    var tn = new TextNode[HTMLElement,TextNode[HTMLElement,_]](str)
+    switchToNode(tn, {})
+    tn
+  }
+  
   // Auto Converts
   //-------------------
   implicit def strToDiv(str: String): Div[HTMLElement, Div[HTMLElement, _]] = {
@@ -85,6 +229,13 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   // Table
   //-------------------
+  
+  def rtd(cl : => Unit) : Td[HTMLElement, Td[HTMLElement, _]]= {
+    td("") {
+      cl
+    }
+  }
+  
   def thead(headers: String*): Thead[HTMLElement, Thead[HTMLElement, _]] = {
     thead {
       tr {
@@ -97,6 +248,24 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
       }
 
     }
+  }
+  
+  def trvalues(values:Any*) : Tr[HTMLElement, Tr[HTMLElement, _]] = {
+    
+    tr {
+      values.foreach {
+        case v : HTMLNode[_,_] => 
+          v.detach
+          switchToNode(v.asInstanceOf[HTMLNode[HTMLElement,_]],{})
+          
+        case null => 
+        case v => td(v.toString()) {
+          
+        }
+
+      }
+    }
+    
   }
 
 }

@@ -9,7 +9,7 @@ source $loc/vui-2.0.0.tm
 #################
 ## VUI Defs 
 #################
-set vui [vui::core::set com.idyria.osi.vui.core.definitions {
+set vui [vui::core::pset com.idyria.osi.vui.core.definitions {
 
 
     ## Scenegraph
