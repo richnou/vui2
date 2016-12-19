@@ -10,10 +10,7 @@ sudo aptitude install tcl8.5 tcl8.6 itcl3
 ########
 if [[ ! -d $loc/../../target/odfi ]] 
 then
-	git clone https://github.com/richnou/odfi-manager.git $loc/../../target/odfi
-	source $loc/../../target/odfi/setup.linux.bash
-	
-
+	git clone --branch v3 --single-branch https://github.com/richnou/odfi-manager.git $loc/../../target/odfi
 else
 	p=$(pwd)
 	cd $loc/../../target/odfi
@@ -21,8 +18,10 @@ else
 	cd $p
 fi
 
-source $loc/../../target/odfi/setup.linux.bash
-odfi --install local.dev-tcl
-odfi --update
+source $loc/../../target/odfi/load.bash
+
+#source $loc/../../target/odfi/setup.linux.bash
+#odfi install tcl/devlib/master
+#odfi --update
 ## REload to make sure new packages are loaded
-source $loc/../../target/odfi/setup.linux.bash
+#source $loc/../../target/odfi/setup.linux.bash

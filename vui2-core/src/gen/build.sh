@@ -6,4 +6,4 @@ source $thisloc/../../../src/odfi/load_odfi.sh
 
 
 ## Run Script
-tclsh $thisloc/gen_interfaces.tcl
+odfi $thisloc/gen_interfaces.tcl
