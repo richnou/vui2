@@ -1,9 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.idyria.osi.vui2</groupId>
 	<artifactId>vui2-parent</artifactId>
-	<version>2.0.0-SNAPSHOT</version>
+	<version>2.0.0</version>
 	<packaging>pom</packaging>
 
 	<!-- <url>http://localhost:8080/</url> -->
@@ -30,7 +29,8 @@
 		<connection>scm:git:https://github.com/richnou/vui2.git</connection>
 		<developerConnection>scm:git:git@github.com:richnou/vui2.git</developerConnection>
 		<url>https://github.com/richnou/vui2</url>
-	</scm>
+	  <tag>vui2-parent-2.0.0</tag>
+  </scm>
 	<distributionManagement>
 		<site>
 			<id>github</id>
@@ -175,7 +175,7 @@
 								<tasks>
 									
 	                                <exec executable="/bin/bash"> 
-	                                    <arg value="src/gen/build.sh"></arg> 
+	                                    <arg value="src/gen/build.sh" /> 
 	                               </exec> 
 								</tasks>
 							</configuration>
@@ -211,7 +211,7 @@
 								<tasks>
 									
 	                                <exec executable="bash.exe"> 
-	                                    <arg value="src/gen/build.sh"></arg> 
+	                                    <arg value="src/gen/build.sh" /> 
 	                               </exec> 
 								</tasks>
 							</configuration>
