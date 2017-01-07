@@ -57,11 +57,5 @@
 			<groupId>com.idyria.osi.ooxoo</groupId>
 			<artifactId>ooxoo-core</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.idyria.osi.aib</groupId>
-			<artifactId>aib-core</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		
 	</dependencies>
 </project>

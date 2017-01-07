@@ -153,7 +153,7 @@
 	</build>
 	<profiles>
 	  <profile>
-	  	<id>native-build</id>
+	  	<id>generate-unix</id>
 	    <activation>
 	      <os>
 	        <family>unix</family> 
@@ -175,6 +175,42 @@
 								<tasks>
 									
 	                                <exec executable="/bin/bash"> 
+	                                    <arg value="src/gen/build.sh"></arg> 
+	                               </exec> 
+								</tasks>
+							</configuration>
+							<goals>
+								<goal>run</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</build>
+	  </profile>
+	  <profile>
+	  	<id>generate-msys2</id>
+	    <activation>
+	      <os>
+	        <family>windows</family> 
+      	   </os>
+      	   <file>
+      	   		<exists>src/gen/build.sh</exists>
+      	   </file>
+	    </activation>
+	    <build>
+		    <plugins>
+		   <!-- This configures compilation for special tricky /dev/pmap buffer allocation -->
+				<plugin>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>generate-sources</id>
+							<phase>generate-sources</phase>
+							<configuration>
+								<tasks>
+									
+	                                <exec executable="bash.exe"> 
 	                                    <arg value="src/gen/build.sh"></arg> 
 	                               </exec> 
 								</tasks>
@@ -257,17 +293,12 @@
 			<dependency>
 				<groupId>com.idyria.osi</groupId>
 				<artifactId>tea</artifactId>
-				<version>3.1.2-SNAPSHOT</version>
+				<version>3.1.2</version>
 			</dependency>
 			<dependency>
 				<groupId>com.idyria.osi.ooxoo</groupId>
 				<artifactId>ooxoo-core</artifactId>
-				<version>3.1.2-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>com.idyria.osi.aib</groupId>
-				<artifactId>aib-core</artifactId>
-				<version>3.1.1-SNAPSHOT</version>
+				<version>3.1.2</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
