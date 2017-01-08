@@ -96,12 +96,7 @@ window.onerror= function(message,script,line,column,errObj) {
                   //document.setMember("base", targetView.renderedNode.get)
                   targetView.renderedNode.get match {
                     case html : StandaloneHtml[_,_] => 
-                      html.engine = Some(new JSEngine {
-                        def executeScript(str:String) : Any = {
-                          onUIThreadBlocking(base.getEngine.executeScript(str))
-                          
-                        }
-                      })
+                      
                     case _ => 
                   }
                  // targetView.renderedNode.get.asInstanceOf[JSEngineReference].engine = Some(base.getEngine)

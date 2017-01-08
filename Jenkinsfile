@@ -4,6 +4,9 @@ node {
   properties([pipelineTriggers([[$class: 'GitHubPushTrigger']])])
   def mvnHome = tool 'maven3'
 
+  env.JAVA_HOME="${tool 'oracle-jdk8'}"
+  env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
+
   stage('Clean') {
     checkout scm
     sh "${mvnHome}/bin/mvn -B clean"
@@ -15,7 +18,7 @@ node {
 
   stage('Test') {
     sh "${mvnHome}/bin/mvn -B -Dmaven.test.failure.ignore test"
-    junit '**/target/surefire-reports/TEST-*.xml'
+    //junit '**/target/surefire-reports/TEST-*.xml'
   }
 
   stage('Deploy') {
