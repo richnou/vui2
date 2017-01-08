@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.idyria.osi.vui2</groupId>
+	<groupId>org.odfi.vui2</groupId>
 	<artifactId>vui2-parent</artifactId>
-	<version>2.0.0</version>
+	<version>2.1.0</version>
 	<packaging>pom</packaging>
 
 	<!-- <url>http://localhost:8080/</url> -->
@@ -10,9 +10,9 @@
 	<!-- use OSI Scala Parent pom to have scala enabled -->
 	<!-- ################# -->
 	<parent>
-		<groupId>com.idyria.osi</groupId>
+		<groupId>org.odfi</groupId>
 		<artifactId>superpom-scala</artifactId>
-		<version>2.11.8.r1</version>
+		<version>2.12.1.r2</version>
 	</parent>
 
 	<!-- Config Properperties -->
@@ -226,7 +226,7 @@
 	  </profile>
 	</profiles>
 
-	<!-- Repositories to find packages -->
+	<!-- Repositories to find OSI packages -->
 	<!-- ############################################## -->
 	<pluginRepositories>
 		<pluginRepository>
@@ -244,17 +244,17 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-			<id>idyria.central</id>
+			<id>odfi.central</id>
 			<name>plugins-release</name>
-			<url>http://www.idyria.com/access/osi/artifactory/libs-release</url>
+			<url>https://www.opendesignflow.org/maven/repository/internal/</url>
 		</pluginRepository>
 		<pluginRepository>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
-			<id>idyria.snapshots</id>
+			<id>odfi.snapshots</id>
 			<name>plugins-snapshot</name>
-			<url>http://www.idyria.com/access/osi/artifactory/libs-snapshot</url>
+			<url>https://www.opendesignflow.org/maven/repository/snapshots/</url>
 		</pluginRepository>
 	</pluginRepositories>
 	<repositories>
@@ -273,17 +273,17 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-			<id>idyria.central</id>
-			<name>libs-release</name>
-			<url>http://www.idyria.com/access/osi/artifactory/libs-release</url>
+			<id>odfi.central</id>
+			<name>odfi-release</name>
+			<url>https://www.opendesignflow.org/maven/repository/internal/</url>
 		</repository>
 		<repository>
 			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<id>idyria.snapshots</id>
-			<name>libs-snapshot</name>
-			<url>http://www.idyria.com/access/osi/artifactory/libs-snapshot</url>
+                <enabled>true</enabled>
+            </snapshots>
+			<id>odfi.snapshots</id>
+			<name>odfi-snapshot</name>
+			<url>https://www.opendesignflow.org/maven/repository/snapshots/</url>
 		</repository>
 	</repositories>
 
@@ -291,14 +291,14 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.idyria.osi</groupId>
+				<groupId>org.odfi</groupId>
 				<artifactId>tea</artifactId>
-				<version>3.1.2</version>
+				<version>3.2.2</version>
 			</dependency>
 			<dependency>
-				<groupId>com.idyria.osi.ooxoo</groupId>
+				<groupId>org.odfi.ooxoo</groupId>
 				<artifactId>ooxoo-core</artifactId>
-				<version>3.1.2</version>
+				<version>3.2.1</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

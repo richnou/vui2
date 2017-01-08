@@ -5,9 +5,9 @@
 	<!-- use OSI Scala Parent pom to have scala enabled -->
 	<!-- ################# -->
 	<parent>
-		<groupId>com.idyria.osi.vui2</groupId>
+		<groupId>org.odfi.vui2</groupId>
 		<artifactId>vui2-parent</artifactId>
-		<version>2.0.0</version>
+		<version>2.1.0</version>
 		<relativePath>../</relativePath>
 	</parent> 
 	
@@ -136,7 +136,7 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.idyria.osi.ooxoo</groupId>
+			<groupId>org.odfi.ooxoo</groupId>
 			<artifactId>ooxoo-core</artifactId>
 		</dependency>
 	</dependencies>
