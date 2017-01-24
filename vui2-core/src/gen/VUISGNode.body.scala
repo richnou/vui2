@@ -150,7 +150,7 @@
   def clear: Unit = {
      //super.clear
     var bk = this.sgChildren
-    this.sgChildren = this.sgChildren.filter(_ ⇒ false)
+    this.sgChildren = this.sgChildren.filter(_ => false)
 
     bk.foreach {
       c => this.@->("child.removed", c)
@@ -162,11 +162,11 @@
 
   def removeChild(n: VUISGNode[BT,_]) = {
     this.sgChildren.contains(n) match {
-      case true ⇒
+      case true =>
         this.sgChildren = this.sgChildren diff Seq(n)
         this.@->("child.removed", n)
       //println(s"Child Removed");
-      case false ⇒
+      case false =>
         //println("Child not removed")
         /*this.sgChildren.foreach {
           n => println(s"node: $n")
