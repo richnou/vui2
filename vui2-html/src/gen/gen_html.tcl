@@ -553,9 +553,9 @@ $htmlScala apply {
 		
             ## Add events
             #####################
-            :def onClick {cl/=>Unit} = {
-                currentNode.onClick{cl}
-            }
+            #:def onClick {cl/=>Unit} = {
+            #    currentNode.onClick{cl}
+            #}
 
         }
 
