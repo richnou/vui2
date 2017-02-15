@@ -267,6 +267,21 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     }
     
   }
+  
+  /**
+   * Create a tr with one td and cl int td
+   */
+  def trtd(text:String)(cl: => Any) = {
+    tr {
+      td(text) {
+        cl
+      }
+    }
+  }
+  
+  def colspan(v:Int) = {
+    +@("colspan" -> v)
+  }
 
 }
 
