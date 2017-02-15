@@ -32,6 +32,17 @@ trait TreeBuilder[BT,MNT <: VUISGNode[BT,_]] extends Dynamic {
     try {
       switchToNode(node, cl)
     } finally {
+      //node.detach
+    }
+  }
+  
+  /**
+   * Run closure on node, make sure it is not added to the tree
+   */
+  def onStandaloneNode[NT <: MNT](node: NT)(cl: => Any) = {
+    try {
+      switchToNode(node, cl)
+    } finally {
       node.detach
     }
   }
