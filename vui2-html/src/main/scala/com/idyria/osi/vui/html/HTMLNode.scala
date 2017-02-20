@@ -271,7 +271,31 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
    * Left sid assignment of string adds classes
    */
   def ::(cl: String): Self = {
-    apply("class" -> ("" + attributes.getOrElse("class", "") + " " + cl))
+    
+    // Split string spec and extract "@" for attributes
+    cl.split(" ").filter(_.length()>0).groupBy {
+      case str if(str(0)=='@') => '@'
+      case other => '.'
+    }.foreach {
+      case ('@',values) => 
+        values.foreach {
+          v => 
+            v.drop(1).split("=").filter(_.isEmpty()==false) match {
+              case splitted if (splitted.size==0) => 
+              case splitted if (splitted.size==1) => +@(splitted(0) -> "true")
+              case splitted =>  +@(splitted(0) -> splitted(0))
+            }
+        }
+      case ('.',values) => 
+        values.foreach {
+          v => 
+            ++@("class",v)
+            
+        }
+      case other => 
+    }
+    
+   
     this.asInstanceOf[Self]
   }
 
