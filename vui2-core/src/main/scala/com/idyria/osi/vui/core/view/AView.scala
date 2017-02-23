@@ -47,12 +47,12 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
   var parentView: Option[AView[BT, _]] = None
 
   def getTopParentView = {
-    println(s"Getting top parent view: " + getProxy[AView[BT, _]].get)
+    //println(s"Getting top parent view: " + getProxy[AView[BT, _]].get)
     var currentView: AView[BT, _] = getProxy[AView[BT, _]].get
     while (currentView.parentView != None)
       currentView = currentView.parentView.get
 
-    println(s"Result top parent view: " + currentView)
+    //println(s"Result top parent view: " + currentView)
     currentView
   }
 
