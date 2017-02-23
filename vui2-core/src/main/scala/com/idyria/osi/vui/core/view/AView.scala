@@ -31,11 +31,11 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
     logFine[AView[_, _]](s"Requesting Change!")
     this.@->("view.replace", v)
   }
-  
+
   def closeView = {
     @->("close")
   }
-  
+
   def onClose(cl: => Unit) = {
     this.on("close") {
       cl
@@ -47,10 +47,12 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
   var parentView: Option[AView[BT, _]] = None
 
   def getTopParentView = {
+    println(s"Getting top parent view: " + getProxy[AView[BT, _]].get)
     var currentView: AView[BT, _] = getProxy[AView[BT, _]].get
     while (currentView.parentView != None)
       currentView = currentView.parentView.get
 
+    println(s"Result top parent view: " + currentView)
     currentView
   }
 
@@ -117,6 +119,7 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
       case None =>
         logFine[AView[BT, T]](s"[RW] Rendering view: " + this.hashCode)
         var node = contentClosure(this)
+        logFine[AView[BT, T]](s"[RW] Result: " + node)
         renderedNode = Some(node)
         this.@->("rendered", node)
         node
@@ -128,8 +131,6 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
     this.renderedNode = None
     this.render
   }
-  
-  
 
 }
 
@@ -399,13 +400,12 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
 
     //-- Register
     var instance = listen match {
-      case true => 
+      case true =>
         autoReloadFor(cl)
         this.newInstance(refObject, this.autoReloadActualClass(cl).asInstanceOf[Class[VT]])
-      case false => 
+      case false =>
         this.newInstance(refObject, cl)
     }
-    
 
     //-- Compile && Create instance
 

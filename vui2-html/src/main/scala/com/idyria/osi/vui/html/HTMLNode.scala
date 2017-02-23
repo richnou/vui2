@@ -187,8 +187,8 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
    */
   def orphan = {
     this.parent match {
-      case null =>
-      case _ => this.parent.removeChild(this)
+      case None =>
+      case Some(p) =>p.removeChild(this)
     }
     this
 

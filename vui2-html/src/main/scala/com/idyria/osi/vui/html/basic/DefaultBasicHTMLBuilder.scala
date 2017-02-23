@@ -60,9 +60,9 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
    * Adds an attribute only if #test is true
    * Useful for attributes like "selected" or "checked" which are active on presence not value
    */
-  def attributeOnTrue(test: Boolean, attributeName: String) = {
+  def attributeIf(test: Boolean)(attributeName: String,attributeValue:String = "") = {
     if (test) {
-      +@(attributeName -> "")
+      +@(attributeName -> attributeValue)
     }
 
   }

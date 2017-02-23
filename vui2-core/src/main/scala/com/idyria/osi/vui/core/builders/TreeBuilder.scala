@@ -81,7 +81,7 @@ trait TreeBuilder[BT,MNT <: VUISGNode[BT,_]] extends Dynamic {
 
         // Add TO top of stack if necessary
         //---------------
-        if (n.parent == null) {
+        if (n.parent.isDefined==false) {
           nodesStack.headOption match {
             case Some(head) => head <= n
             case _ =>
@@ -106,7 +106,7 @@ trait TreeBuilder[BT,MNT <: VUISGNode[BT,_]] extends Dynamic {
 
       // If node, add - execute
       // If no nodes, save in top nodes
-      case n: VUISGNode[BT,_] =>
+      /*case n: VUISGNode[BT,_] =>
 
         //println(s"Adding Simple NODE "+nodesStack.headOption)
         if (n.parent == null) {
@@ -116,7 +116,7 @@ trait TreeBuilder[BT,MNT <: VUISGNode[BT,_]] extends Dynamic {
           }
         }
 
-        cl
+        cl*/
 
     }
 
