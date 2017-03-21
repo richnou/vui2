@@ -272,8 +272,17 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
    */
   def ::(cl: String): Self = {
     
+    // Find # to define ID
+    var specString = """#([\w-_\.]+)""".r.findFirstMatchIn(cl) match {
+      case Some(m) =>
+        this.++@("id" -> m.group(1))
+        cl.replace(m.group(0), "")
+      case None => cl
+    }
+    
     // Split string spec and extract "@" for attributes
-    cl.split(" ").filter(_.length()>0).groupBy {
+    //--------------
+    specString.split(" ").filter(_.length()>0).groupBy {
       case str if(str(0)=='@') => '@'
       case other => '.'
     }.foreach {

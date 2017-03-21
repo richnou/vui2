@@ -36,7 +36,8 @@ $htmlScala apply {
             Li          li 
             Body        body 
             Head        head 
-            Html        html 
+            Html        html
+	    Meta	meta
             Image       {img    src/java.net.URI}            
             Stylesheet  {link  href/java.net.URI}
             A           {a href}

@@ -67,6 +67,13 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   }
   
+  /**
+   * Adde data atribute
+   */
+ def data(nameValue:(String , Any)) = {
+   +@("data-"+nameValue._1 -> nameValue._2.toString())
+ }
+  
   // Text
   //--------------
   def span(str:String) :  Span[HTMLElement, Span[HTMLElement, _]] = {
