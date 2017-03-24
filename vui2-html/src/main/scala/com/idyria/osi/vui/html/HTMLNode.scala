@@ -361,12 +361,7 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
     }*/
     var indentString = ""
 
-    s"""
-${indentString.mkString}<$nodeName$attrs>
-${textContent}
-${indentString.mkString}${this.children.map(_.toString).mkString("\n\n")}
-${indentString.mkString}</$nodeName>
-    """
+    s"""${indentString.mkString}<$nodeName$attrs>${textContent}${indentString.mkString}${this.children.map(_.toString).mkString("\n\n")}${indentString.mkString}</$nodeName>"""
   }
 
   // DOM Events
