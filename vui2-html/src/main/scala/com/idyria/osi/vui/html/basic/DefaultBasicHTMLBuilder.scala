@@ -162,6 +162,20 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   }
 
+    
+  // Value Range definition
+  //----------------------
+  def maxValue(str:String) = {
+    +@("max"->str)
+  }
+  def minValue(str:String) = {
+    +@("min"->str)
+  }
+  def stepValue(v:Double) = {
+    +@("step"->v.toString())
+  }
+  
+  
   // Import XML Parsed Stuff
   //----------
   def importHTML(xml: Elem) = {

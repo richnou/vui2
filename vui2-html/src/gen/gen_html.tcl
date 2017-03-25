@@ -79,7 +79,8 @@ $htmlScala apply {
 
 	    Wrapper     {wrapper textContent/String}
             
-            
+            Video	video
+	    Source	source
 
         }
 

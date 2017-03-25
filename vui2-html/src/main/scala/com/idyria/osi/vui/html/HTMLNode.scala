@@ -209,7 +209,10 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
   // ID
   //------------
   def getId: String = {
-    id
+    attributes.get("id") match {
+      case Some(f) => f.toString()
+      case other => id
+    }
   }
 
   // Attributes
