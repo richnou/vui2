@@ -175,6 +175,17 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     +@("step"->v.toString())
   }
   
+  def isSelected = {
+    +@("selected" -> true)
+  }
+  
+   def isChecked = {
+    +@("checked" -> true)
+  }
+   
+   def fieldName(str:String) = {
+     +@("name" -> str) 
+   }
   
   // Import XML Parsed Stuff
   //----------

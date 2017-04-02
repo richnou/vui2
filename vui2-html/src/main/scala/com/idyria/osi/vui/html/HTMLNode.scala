@@ -269,6 +269,8 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
   def attributeOption(name: String) = {
     this.attributes.get(name)
   }
+  
+  def hasAttribute(name:String) = attributes.contains(name)
 
   /**
    * Left sid assignment of string adds classes
