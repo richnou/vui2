@@ -88,7 +88,7 @@ trait VUISGNode[BT, +Self] extends com.idyria.osi.vui.core.utils.ApplyTrait[Self
     var currentParent = parent
     var stop = false
     var res: Option[NT] = None
-    while (!false && currentParent.isDefined) {
+    while (!stop && currentParent.isDefined) {
 
       tag.runtimeClass.isInstance(currentParent.get) match {
         case true =>
@@ -268,6 +268,38 @@ trait VUISGNode[BT, +Self] extends com.idyria.osi.vui.core.utils.ApplyTrait[Self
       }
 
     }
+
+  }
+  
+  def onSubNodesMap[T](f: PartialFunction[VUISGNode[BT, _], T]): List[T] = {
+
+    // Stack of nodes to process
+    //------------------
+    var results = List[T]()
+    var nodes = scala.collection.mutable.Stack[VUISGNode[BT, _]]()
+    this.children.foreach(nodes.push(_))
+
+    while (nodes.isEmpty == false) {
+
+      // Take current
+      var current = nodes.pop
+
+      // Execute function
+      if (f.isDefinedAt(current)) {
+        results = results :+ f(current)
+      }
+      
+
+      // Add Children if some
+      current match {
+        case g: VUISGNode[BT, _] => 
+          g.children.foreach(nodes.push(_))
+        case _ =>
+      }
+
+    }
+    
+    results
 
   }
 
