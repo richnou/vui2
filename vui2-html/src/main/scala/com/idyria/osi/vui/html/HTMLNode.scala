@@ -2,6 +2,8 @@
 
 package com.idyria.osi.vui.html
 
+import scala.reflect.ClassTag
+
 class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) extends com.idyria.osi.vui.core.definitions.VUIComponent[HT, Self] {
 
   this: Self =>
@@ -211,8 +213,15 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
   def getId: String = {
     attributes.get("id") match {
       case Some(f) => f.toString()
-      case other => id
+      case other => 
+        //-- generate
+        this.setId(this.hashCode().toString())
     }
+  }
+  
+  def setId(str:String) =  {
+    this("id"->str)
+    str
   }
 
   // Attributes
@@ -272,6 +281,16 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
   
   def hasAttribute(name:String) = attributes.contains(name)
 
+  def getDataOfType[T](str:String)(implicit dt:ClassTag[T]) = attributes.get("data-"+str) match {
+    case Some(found) if (dt.runtimeClass.isInstance(found))=>Some(found.asInstanceOf[T])
+    case other => None
+  }
+  
+  def onDataOfType[T](str:String)(cl: T => Any)(implicit dt:ClassTag[T]) = getDataOfType[T](str) match {
+    case Some(found) => cl(found)
+    case other => 
+  }
+  
   /**
    * Left sid assignment of string adds classes
    */

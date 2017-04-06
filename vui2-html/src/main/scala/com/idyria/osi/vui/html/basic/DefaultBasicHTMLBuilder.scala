@@ -19,6 +19,9 @@ import com.idyria.osi.vui.html.Tr
 import com.idyria.osi.vui.html.Wrapper
 import com.idyria.osi.vui.html.xml.XMLHTMLNode
 import com.idyria.osi.vui.html.TextNode
+import com.idyria.osi.vui.html.Table
+import com.idyria.osi.vui.html.Tbody
+import com.idyria.osi.vui.html.Th
 
 trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
@@ -26,26 +29,23 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   //---------------
   // Placeholder
   //--------------
-  var placesMap = Map[String,() => HTMLNode[HTMLElement,_]]()
-  
-  def placePart(id:String)  = {
+  var placesMap = Map[String, () => HTMLNode[HTMLElement, _]]()
+
+  def placePart(id: String) = {
     placesMap.get(id) match {
-      case Some(cl) => 
-       switchToNode(cl(),{})
-        
-      case None => 
-        
-        throw new RuntimeException("Cannot place part: "+id+" because it hasn't been defined")
+      case Some(cl) =>
+        switchToNode(cl(), {})
+
+      case None =>
+
+        throw new RuntimeException("Cannot place part: " + id + " because it hasn't been defined")
     }
   }
-  
-  def definePart(id:String)(cl: =>HTMLNode[HTMLElement,_]) {
-    placesMap = placesMap + (id ->{ () =>  cl })
+
+  def definePart(id: String)(cl: => HTMLNode[HTMLElement, _]) {
+    placesMap = placesMap + (id -> { () => cl })
   }
-  
-  
-  
-  
+
   // Content API
   //----------------
 
@@ -60,33 +60,32 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
    * Adds an attribute only if #test is true
    * Useful for attributes like "selected" or "checked" which are active on presence not value
    */
-  def attributeIf(test: Boolean)(attributeName: String,attributeValue:String = "") = {
+  def attributeIf(test: Boolean)(attributeName: String, attributeValue: String = "") = {
     if (test) {
       +@(attributeName -> attributeValue)
     }
 
   }
-  
+
   /**
    * Adde data atribute
    */
- def data(nameValue:(String , Any)) = {
-   +@("data-"+nameValue._1 -> nameValue._2.toString())
- }
-  
+  def data(nameValue: (String, Any)) = {
+    +@("data-" + nameValue._1 -> nameValue._2)
+  }
+
   // Text
   //--------------
-  def span(str:String) :  Span[HTMLElement, Span[HTMLElement, _]] = {
-      span {
-        textContent(str)
-      }
+  def span(str: String): Span[HTMLElement, Span[HTMLElement, _]] = {
+    span {
+      textContent(str)
+    }
   }
-  def p(str:String) :  P[HTMLElement, P[HTMLElement, _]] = {
-      p {
-        textContent(str)
-      }
+  def p(str: String): P[HTMLElement, P[HTMLElement, _]] = {
+    p {
+      textContent(str)
+    }
   }
-  
 
   // Forms
   //--------------------
@@ -112,8 +111,8 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
         switchToNode(inputElement, {})
 
         // If input Element has an ID, and for none, use it on for
-        (inputElement.attributeOption("id"),labelElement.attributeOption("id")) match {
-          case (Some(id),None) =>
+        (inputElement.attributeOption("id"), labelElement.attributeOption("id")) match {
+          case (Some(id), None) =>
             +@("for" -> id.toString())
           case _ =>
         }
@@ -162,47 +161,58 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   }
 
-    
+  /**
+   * Makes select with options based on tuples
+   * (value -> Display Text)
+   */
+  def selectOptions(options: List[(Any, Any)])(cl: => Any) = {
+    select {
+      options.foreach {
+        case (v, t) => option(v.toString)(text(t.toString))
+      }
+      cl
+    }
+  }
+
   // Value Range definition
   //----------------------
-  def maxValue(str:String) = {
-    +@("max"->str)
+  def maxValue(str: String) = {
+    +@("max" -> str)
   }
-  def minValue(str:String) = {
-    +@("min"->str)
+  def minValue(str: String) = {
+    +@("min" -> str)
   }
-  def stepValue(v:Double) = {
-    +@("step"->v.toString())
+  def stepValue(v: Double) = {
+    +@("step" -> v.toString())
   }
-  
+
   def isSelected = {
     +@("selected" -> true)
   }
-  
-   def isChecked = {
+
+  def isChecked = {
     +@("checked" -> true)
   }
-   
-   def fieldName(str:String) = {
-     +@("name" -> str) 
-   }
-  
+
+  def fieldName(str: String) = {
+    +@("name" -> str)
+  }
+
   // Import XML Parsed Stuff
   //----------
   def importHTML(xml: Elem) = {
 
-    switchToNode(new XMLHTMLNode[HTMLElement, XMLHTMLNode[HTMLElement, _]](xml),{})
+    switchToNode(new XMLHTMLNode[HTMLElement, XMLHTMLNode[HTMLElement, _]](xml), {})
   }
 
   def $(xml: Elem)(cl: => Any): XMLHTMLNode[HTMLElement, XMLHTMLNode[HTMLElement, _]] = {
-    switchToNode(new XMLHTMLNode[HTMLElement, XMLHTMLNode[HTMLElement, _]](xml),cl)
+    switchToNode(new XMLHTMLNode[HTMLElement, XMLHTMLNode[HTMLElement, _]](xml), cl)
   }
-  
-  
+
   /**
    * Selector
    */
-  def $(selector:String): Option[HTMLNode[HTMLElement,HTMLNode[_,_]]] = {
+  def $(selector: String): Option[HTMLNode[HTMLElement, HTMLNode[_, _]]] = {
     currentNode.select(selector)
   }
   /*def +(xml:Elem) = {
@@ -242,12 +252,16 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   // Text
   //--------------
-  def text(str:String) = {
-    var tn = new TextNode[HTMLElement,TextNode[HTMLElement,_]](str)
+  def text(str: String) = {
+    var tn = new TextNode[HTMLElement, TextNode[HTMLElement, _]](str)
     switchToNode(tn, {})
     tn
   }
-  
+
+  def tspan(str: String) = {
+    span(text(str))
+  }
+
   // Auto Converts
   //-------------------
   implicit def strToDiv(str: String): Div[HTMLElement, Div[HTMLElement, _]] = {
@@ -261,13 +275,19 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   // Table
   //-------------------
-  
-  def rtd(cl : => Unit) : Td[HTMLElement, Td[HTMLElement, _]]= {
+
+  def rtd(cl: => Unit): Td[HTMLElement, Td[HTMLElement, _]] = {
     td("") {
       cl
     }
   }
   
+  def rth(cl: => Unit): Th[HTMLElement, Th[HTMLElement, _]] = {
+    th("") {
+      cl
+    }
+  }
+
   def thead(headers: String*): Thead[HTMLElement, Thead[HTMLElement, _]] = {
     thead {
       tr {
@@ -281,37 +301,98 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
     }
   }
-  
-  def trvalues(values:Any*) : Tr[HTMLElement, Tr[HTMLElement, _]] = {
-    
+
+  def thead(headers: List[String]): Thead[HTMLElement, Thead[HTMLElement, _]] = {
+    thead {
+      tr {
+        headers.foreach {
+          hn =>
+            th(hn) {
+
+            }
+        }
+      }
+
+    }
+  }
+
+  def trvalues(values: Any*): Tr[HTMLElement, Tr[HTMLElement, _]] = {
+
     tr {
       values.foreach {
-        case v : HTMLNode[_,_] => 
+        case v: HTMLNode[_, _] =>
           v.detach
-          switchToNode(v.asInstanceOf[HTMLNode[HTMLElement,_]],{})
-          
-        case null => 
+          switchToNode(v.asInstanceOf[HTMLNode[HTMLElement, _]], {})
+
+        case null =>
         case v => td(v.toString()) {
-          
+
         }
 
       }
     }
-    
+
   }
-  
+
+  def tbodyTrLoop[V](objs: Iterable[V])(cl: V => Any) = {
+    tbody {
+      trLoop[V](objs)(cl)
+    }
+  }
+  def trLoop[V](objs: Iterable[V])(cl: V => Any) = objs.foreach {
+    v =>
+      tr {
+        cl(v)
+      }
+  }
+
+  /**
+   * Makes tfoot with one tr and a full spanning td
+   */
+  def tfootTrTh(cl: => Any) = {
+
+    val span = currentNode match {
+      case t: Table[_, _] if (t.children.find(n => n.isInstanceOf[Tbody[_, _]]).isDefined) =>
+
+        val tbody = t.children.collectFirst { case tr: Tbody[_, _] => tr }.get
+        tbody.children.collectFirst { case tr: Tr[_, _] => tr } match {
+          case None =>
+              //val thead = t.children.collectFirst { case tr: Thead[_, _] => tr }
+              0
+            
+            
+          case Some(tr) =>
+            tr.children.collect { case td: Td[_, _] => td }.map {
+              case td if (td.hasAttribute("colspan")) => td.attribute("colspan").toInt
+              case td => 1
+            }.sum
+        }
+
+      case other => 0
+    }
+    tfoot {
+      tr {
+        rth {
+          colspan(span)
+          cl
+        }
+      }
+    }
+
+  }
+
   /**
    * Create a tr with one td and cl int td
    */
-  def trtd(text:String)(cl: => Any) = {
+  def trtd(text: String)(cl: => Any) = {
     tr {
       td(text) {
         cl
       }
     }
   }
-  
-  def colspan(v:Int) = {
+
+  def colspan(v: Int) = {
     +@("colspan" -> v)
   }
 
