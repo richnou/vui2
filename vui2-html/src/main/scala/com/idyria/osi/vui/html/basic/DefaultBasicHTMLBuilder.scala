@@ -34,11 +34,11 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   def placePart(id: String) = {
     placesMap.get(id) match {
       case Some(cl) =>
-        switchToNode(cl(), {})
+        Some(switchToNode(cl(), {}))
 
       case None =>
-
-        throw new RuntimeException("Cannot place part: " + id + " because it hasn't been defined")
+        None
+        //throw new RuntimeException("Cannot place part: " + id + " because it hasn't been defined")
     }
   }
 
