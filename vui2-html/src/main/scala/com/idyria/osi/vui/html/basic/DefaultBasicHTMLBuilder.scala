@@ -351,6 +351,7 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
    */
   def tfootTrTh(cl: => Any) = {
 
+    // Search for actual Colspan required
     val span = currentNode match {
       case t: Table[_, _] if (t.children.find(n => n.isInstanceOf[Tbody[_, _]]).isDefined) =>
 
