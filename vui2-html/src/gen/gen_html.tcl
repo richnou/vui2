@@ -82,6 +82,7 @@ $htmlScala apply {
             
             Video	video
 	    Source	source
+	    Audio	audio
 
         }
 
