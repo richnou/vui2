@@ -45,6 +45,16 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   def definePart(id: String)(cl: => HTMLNode[HTMLElement, _]) {
     placesMap = placesMap + (id -> { () => cl })
   }
+  
+  // Sub View Placement
+  //----------------------
+  def addView[T <: BasicHTMLView](v:T) = {
+    
+    val r = v.rerender
+    r.detach
+    add(r)
+    r
+  }
 
   // Content API
   //----------------
