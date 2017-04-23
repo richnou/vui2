@@ -281,6 +281,19 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
   
   def hasAttribute(name:String) = attributes.contains(name)
 
+  // Classes
+  //----------------
+  def removeClass(name:String) = {
+    attributeOption("class") match {
+      case Some(classValue) =>
+        +@("class" -> classValue.toString.replace(name,""))
+      case None => 
+    }
+    this
+  }
+  
+  // Data
+  //----------------
   def getDataOfType[T](str:String)(implicit dt:ClassTag[T]) = attributes.get("data-"+str) match {
     case Some(found) if (dt.runtimeClass.isInstance(found))=>Some(found.asInstanceOf[T])
     case other => None
