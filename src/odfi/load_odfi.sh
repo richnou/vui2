@@ -19,6 +19,7 @@ else
 fi
 
 source $loc/../../target/odfi/load.bash
+odfi install tcl/devlib
 
 #source $loc/../../target/odfi/setup.linux.bash
 #odfi install tcl/devlib/master
