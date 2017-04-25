@@ -10,7 +10,7 @@ sudo aptitude install tcl8.5 tcl8.6 itcl3
 ########
 if [[ ! -d $loc/../../target/odfi ]] 
 then
-	git clone --branch v3 --single-branch https://github.com/richnou/odfi-manager.git $loc/../../target/odfi
+	git clone --branch dev --single-branch https://github.com/richnou/odfi-manager.git $loc/../../target/odfi
 else
 	p=$(pwd)
 	cd $loc/../../target/odfi
