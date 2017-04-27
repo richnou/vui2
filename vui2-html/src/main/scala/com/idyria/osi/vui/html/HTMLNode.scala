@@ -329,7 +329,7 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
             v.drop(1).split("=").filter(_.isEmpty()==false) match {
               case splitted if (splitted.size==0) => 
               case splitted if (splitted.size==1) => +@(splitted(0) -> "true")
-              case splitted =>  +@(splitted(0) -> splitted(0))
+              case splitted =>  +@(splitted(0) -> splitted(1))
             }
         }
       case ('.',values) => 
