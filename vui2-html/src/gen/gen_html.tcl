@@ -36,7 +36,9 @@ $htmlScala apply {
             Li          li 
             Body        body 
             Head        head 
-            Html        html 
+            Html        html
+	    Meta	meta
+	    Title	{title textContent/String}
             Image       {img    src/java.net.URI}            
             Stylesheet  {link  href/java.net.URI}
             A           {a href}
@@ -78,7 +80,9 @@ $htmlScala apply {
 
 	    Wrapper     {wrapper textContent/String}
             
-            
+            Video	video
+	    Source	source
+	    Audio	audio
 
         }
 
@@ -553,9 +557,9 @@ $htmlScala apply {
 		
             ## Add events
             #####################
-            :def onClick {cl/=>Unit} = {
-                currentNode.onClick{cl}
-            }
+            #:def onClick {cl/=>Unit} = {
+            #    currentNode.onClick{cl}
+            #}
 
         }
 

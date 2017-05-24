@@ -56,8 +56,8 @@ class ValueTuple[X, Y](var value: Tuple2[X, Y]) extends ElementBuffer {
 
     x = value._1.toString
     y = value._2 match {
-      case b: Buffer ⇒ b
-      case v         ⇒ new XSDStringBuffer(v.toString)
+      case b: Buffer => b
+      case v         => new XSDStringBuffer(v.toString)
     }
 
     super.streamOut(du)

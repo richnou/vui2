@@ -8,7 +8,9 @@ import java.nio.file.CopyOption
 import java.nio.file.StandardCopyOption
 import com.idyria.osi.tea.logging.TLog
 import org.scalatest.BeforeAndAfter
+import org.scalatest.Ignore
 
+@Ignore
 class AViewAutoReloadTest extends FunSuite with GivenWhenThen with BeforeAndAfter {
 
   var compiler: AViewCompiler[DummyBack, ViewClass] = null

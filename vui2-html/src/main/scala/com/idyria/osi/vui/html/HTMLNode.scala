@@ -2,6 +2,8 @@
 
 package com.idyria.osi.vui.html
 
+import scala.reflect.ClassTag
+
 class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) extends com.idyria.osi.vui.core.definitions.VUIComponent[HT, Self] {
 
   this: Self =>
@@ -187,8 +189,8 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
    */
   def orphan = {
     this.parent match {
-      case null =>
-      case _ => this.parent.removeChild(this)
+      case None =>
+      case Some(p) =>p.removeChild(this)
     }
     this
 
@@ -209,7 +211,17 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
   // ID
   //------------
   def getId: String = {
-    id
+    attributes.get("id") match {
+      case Some(f) => f.toString()
+      case other => 
+        //-- generate
+        this.setId(this.hashCode().toString())
+    }
+  }
+  
+  def setId(str:String) =  {
+    this("id"->str)
+    str
   }
 
   // Attributes
@@ -266,12 +278,70 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
   def attributeOption(name: String) = {
     this.attributes.get(name)
   }
+  
+  def hasAttribute(name:String) = attributes.contains(name)
 
+  // Classes
+  //----------------
+  def removeClass(name:String) = {
+    attributeOption("class") match {
+      case Some(classValue) =>
+        +@("class" -> classValue.toString.replace(name,""))
+      case None => 
+    }
+    this
+  }
+  
+  // Data
+  //----------------
+  def getDataOfType[T](str:String)(implicit dt:ClassTag[T]) = attributes.get("data-"+str) match {
+    case Some(found) if (dt.runtimeClass.isInstance(found))=>Some(found.asInstanceOf[T])
+    case other => None
+  }
+  
+  def onDataOfType[T](str:String)(cl: T => Any)(implicit dt:ClassTag[T]) = getDataOfType[T](str) match {
+    case Some(found) => cl(found)
+    case other => 
+  }
+  
   /**
    * Left sid assignment of string adds classes
    */
   def ::(cl: String): Self = {
-    apply("class" -> ("" + attributes.getOrElse("class", "") + " " + cl))
+    
+    // Find # to define ID
+    var specString = """#([\w-_\.]+)""".r.findFirstMatchIn(cl) match {
+      case Some(m) =>
+        this.++@("id" -> m.group(1))
+        cl.replace(m.group(0), "")
+      case None => cl
+    }
+    
+    // Split string spec and extract "@" for attributes
+    //--------------
+    specString.split(" ").filter(_.length()>0).groupBy {
+      case str if(str(0)=='@') => '@'
+      case other => '.'
+    }.foreach {
+      case ('@',values) => 
+        values.foreach {
+          v => 
+            v.drop(1).split("=").filter(_.isEmpty()==false) match {
+              case splitted if (splitted.size==0) => 
+              case splitted if (splitted.size==1) => +@(splitted(0) -> "true")
+              case splitted =>  +@(splitted(0) -> splitted(1))
+            }
+        }
+      case ('.',values) => 
+        values.foreach {
+          v => 
+            ++@("class",v)
+            
+        }
+      case other => 
+    }
+    
+   
     this.asInstanceOf[Self]
   }
 
@@ -328,12 +398,7 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
     }*/
     var indentString = ""
 
-    s"""
-${indentString.mkString}<$nodeName$attrs>
-${textContent}
-${indentString.mkString}${this.children.map(_.toString).mkString("\n\n")}
-${indentString.mkString}</$nodeName>
-    """
+    s"""${indentString.mkString}<$nodeName$attrs>${textContent}${indentString.mkString}${this.children.map(_.toString).mkString("\n\n")}${indentString.mkString}</$nodeName>"""
   }
 
   // DOM Events

@@ -15,8 +15,12 @@ set vui [vui::core::pset com.idyria.osi.vui.core.definitions {
     ## Scenegraph
     ###############
     :component "SGNode" {
-        
+	
+	    
         :onMap scala {
+		
+        	:noGenerate set true
+		
            :addTrait com.idyria.osi.tea.listeners.ListeningSupport {
 
            }

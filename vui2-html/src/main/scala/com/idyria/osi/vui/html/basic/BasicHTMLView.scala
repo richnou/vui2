@@ -8,7 +8,7 @@ import org.w3c.dom.html.HTMLElement
 import com.idyria.osi.vui.html.HTMLNode
 
  // with StandaloneHTMLUIBuilder
-class BasicHTMLView extends AView[HTMLElement,HTMLNode[HTMLElement,HTMLNode[HTMLElement,_]]]  {
+class BasicHTMLView extends AView[HTMLElement,HTMLNode[HTMLElement,HTMLNode[HTMLElement,_]]]  with DefaultBasicHTMLBuilder {
 
 }
 

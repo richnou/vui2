@@ -31,11 +31,11 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
     logFine[AView[_, _]](s"Requesting Change!")
     this.@->("view.replace", v)
   }
-  
+
   def closeView = {
     @->("close")
   }
-  
+
   def onClose(cl: => Unit) = {
     this.on("close") {
       cl
@@ -47,10 +47,12 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
   var parentView: Option[AView[BT, _]] = None
 
   def getTopParentView = {
+    //println(s"Getting top parent view: " + getProxy[AView[BT, _]].get)
     var currentView: AView[BT, _] = getProxy[AView[BT, _]].get
     while (currentView.parentView != None)
       currentView = currentView.parentView.get
 
+    //println(s"Result top parent view: " + currentView)
     currentView
   }
 
@@ -93,7 +95,7 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
 
   // Content/ Render
   //----------------
-  var contentClosure: AView[BT, T] ⇒ T = null
+  var contentClosure: AView[BT, T] => T = null
 
   var renderedNode: Option[T] = None
 
@@ -117,6 +119,7 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
       case None =>
         logFine[AView[BT, T]](s"[RW] Rendering view: " + this.hashCode)
         var node = contentClosure(this)
+        logFine[AView[BT, T]](s"[RW] Result: " + node)
         renderedNode = Some(node)
         this.@->("rendered", node)
         node
@@ -128,8 +131,6 @@ class AView[BT, T <: VUISGNode[BT, _]] extends TLogSource with ListeningSupport 
     this.renderedNode = None
     this.render
   }
-  
-  
 
 }
 
@@ -156,15 +157,15 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
 
   def addCompileImport(cl: Class[_]): Unit = {
     compileImports.contains(cl) match {
-      case false ⇒ compileImports = compileImports :+ cl
-      case _ ⇒
+      case false => compileImports = compileImports :+ cl
+      case _ =>
     }
   }
 
   def addCompileImport(p: Package): Unit = {
     compileImportPackages.contains(p) match {
-      case false ⇒ compileImportPackages = compileImportPackages :+ p
-      case _ ⇒
+      case false => compileImportPackages = compileImportPackages :+ p
+      case _ =>
     }
   }
 
@@ -395,14 +396,18 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
   /**
    *
    */
-  def createView[VT <: T](refObject: Option[VT], cl: Class[VT], listen: Boolean = true)(implicit tag: TypeTag[VT]): VT = {
+  def createView[VT <: T](refObject: Option[VT], cl: Class[VT], listen: Boolean = false)(implicit tag: TypeTag[VT]): VT = {
 
     //-- Register
-    autoReloadFor(cl)
+    var instance = listen match {
+      case true =>
+        autoReloadFor(cl)
+        this.newInstance(refObject, this.autoReloadActualClass(cl).asInstanceOf[Class[VT]])
+      case false =>
+        this.newInstance(refObject, cl)
+    }
 
     //-- Compile && Create instance
-
-    var instance = this.newInstance(refObject, this.autoReloadActualClass(cl).asInstanceOf[Class[VT]])
 
     //-- Register object for reload
     this.registerView(cl, instance)
@@ -675,7 +680,7 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
         //-- Prepare traits
         var traits = this.compileTraits.size match {
           case 0 => ""
-          case _ => this.compileTraits.map(cl ⇒ cl.getCanonicalName()).mkString("with ", " with ", "")
+          case _ => this.compileTraits.map(cl => cl.getCanonicalName()).mkString("with ", " with ", "")
         }
 
         var viewString = s"""
@@ -686,9 +691,9 @@ class AViewCompiler[BT, T <: AView[BT, _ <: VUISGNode[BT, _]]] extends ClassDoma
         import  com.idyria.osi.wsb.webapp.injection.Injector._
         import com.idyria.osi.wsb.webapp.injection._
         
-        ${this.compileImports.map { i ⇒ s"import ${i.getCanonicalName()}" }.mkString("\n")}
+        ${this.compileImports.map { i => s"import ${i.getCanonicalName()}" }.mkString("\n")}
         
-        ${this.compileImportPackages.map { p ⇒ s"import ${p.getName()}._" }.mkString("\n")}
+        ${this.compileImportPackages.map { p => s"import ${p.getName()}._" }.mkString("\n")}
         
         class $targetName extends AView[T] $traits {    
         
