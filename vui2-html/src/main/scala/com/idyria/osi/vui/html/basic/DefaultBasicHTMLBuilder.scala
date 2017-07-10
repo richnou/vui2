@@ -208,6 +208,17 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     +@("name" -> str)
   }
 
+  def fieldPlaceholder(text:String) = {
+     +@("placeHolder" -> text)
+  }
+  
+  def fieldNameAndPlaceholder(name:String,text:String) = {
+    fieldName(name)
+    fieldPlaceholder(text)
+    
+  }
+  
+  
   // Import XML Parsed Stuff
   //----------
   def importHTML(xml: Elem) = {

@@ -60,14 +60,14 @@ trait VUISGNode[BT, +Self] extends com.idyria.osi.vui.core.utils.ApplyTrait[Self
     this.parent = Some(p)
 
   }
-  
+
   def removeParent = {
     this.parent match {
       case None =>
       case Some(p) =>
         p.removeChild(this)
     }
-    
+
     this.parent = None
 
   }
@@ -270,7 +270,10 @@ trait VUISGNode[BT, +Self] extends com.idyria.osi.vui.core.utils.ApplyTrait[Self
     }
 
   }
-  
+
+  /**
+   * Breadth first
+   */
   def onSubNodesMap[T](f: PartialFunction[VUISGNode[BT, _], T]): List[T] = {
 
     // Stack of nodes to process
@@ -288,23 +291,68 @@ trait VUISGNode[BT, +Self] extends com.idyria.osi.vui.core.utils.ApplyTrait[Self
       if (f.isDefinedAt(current)) {
         results = results :+ f(current)
       }
-      
 
       // Add Children if some
       current match {
-        case g: VUISGNode[BT, _] => 
+        case g: VUISGNode[BT, _] =>
           g.children.foreach(nodes.push(_))
         case _ =>
       }
 
     }
-    
+
     results
 
   }
 
   // Search 
   //-----------------
+
+  /**
+   * Breadth-first search
+   * Returns the first descendant to match
+   */
+  def findDescendant(cl: VUISGNode[BT, _] => Boolean) = {
+
+    // Stack of nodes to process
+    //------------------
+    var res: Option[VUISGNode[BT, _]] = None
+    var nodes = scala.collection.mutable.Stack[VUISGNode[BT, _]]()
+    this.children.foreach(nodes.push(_))
+
+    while (nodes.isEmpty == false) {
+
+      // Take current
+      var current = nodes.pop
+
+      // Execute function
+      cl(current) match {
+        case true =>
+          res = Some(current)
+          nodes.clear()
+        case false =>
+          // Add Children if some
+          current match {
+            case g: VUISGNode[BT, _] =>
+              g.children.foreach(nodes.push(_))
+            case _ =>
+          }
+      }
+
+    }
+
+    res
+  }
+  def findDescendantOfType[T <: VUISGNode[BT, _]](implicit tag: ClassTag[T]) = {
+    findDescendant {
+      case n if (tag.runtimeClass.isInstance(n)) => true
+      case other => false
+    } match {
+      case Some(r) => Some(r.asInstanceOf[T])
+      case None => None
+    }
+  }
+
   def searchByName(name: String): Option[VUISGNode[BT, _]] = {
 
     def search(current: VUISGNode[BT, _], name: String): Option[VUISGNode[BT, _]] = {
