@@ -312,6 +312,42 @@ trait VUISGNode[BT, +Self] extends com.idyria.osi.vui.core.utils.ApplyTrait[Self
    * Breadth-first search
    * Returns the first descendant to match
    */
+  def findDescendants(cl: VUISGNode[BT, _] => Boolean) = {
+
+    // Stack of nodes to process
+    //------------------
+    var res = List[VUISGNode[BT, _]]()
+    var nodes = scala.collection.mutable.Stack[VUISGNode[BT, _]]()
+    this.children.foreach(nodes.push(_))
+
+    while (nodes.isEmpty == false) {
+
+      // Take current
+      var current = nodes.pop
+
+      // Execute function
+      cl(current) match {
+        case true =>
+          res = res :+ (current)
+          nodes.clear()
+        case false =>
+          // Add Children if some
+          current match {
+            case g: VUISGNode[BT, _] =>
+              g.children.foreach(nodes.push(_))
+            case _ =>
+          }
+      }
+
+    }
+
+    res
+  }
+  
+  /**
+   * Breadth-first search
+   * Returns the first descendant to match
+   */
   def findDescendant(cl: VUISGNode[BT, _] => Boolean) = {
 
     // Stack of nodes to process
@@ -351,6 +387,13 @@ trait VUISGNode[BT, +Self] extends com.idyria.osi.vui.core.utils.ApplyTrait[Self
       case Some(r) => Some(r.asInstanceOf[T])
       case None => None
     }
+  }
+  
+  def findDescendantsOfType[T <: VUISGNode[BT, _]](implicit tag: ClassTag[T]) = {
+    findDescendants {
+      case n if (tag.runtimeClass.isInstance(n)) => true
+      case other => false
+    }.map(_.asInstanceOf[T])
   }
 
   def searchByName(name: String): Option[VUISGNode[BT, _]] = {

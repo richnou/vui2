@@ -4,7 +4,7 @@ loc=$(dirname "$(readlink -f ${BASH_SOURCE[0]})")
 
 ## Make sure we have TCL
 #########
-sudo aptitude install tcl8.5 tcl8.6 itcl3
+sudo aptitude install tcl8.5 tcl8.6 itcl3 nsf
 
 ## make sure we have ODFI 
 ########
