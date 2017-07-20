@@ -71,6 +71,17 @@ trait VUISGNode[BT, +Self] extends com.idyria.osi.vui.core.utils.ApplyTrait[Self
     this.parent = None
 
   }
+  
+  /**
+   * Set this node to first child in it's parent
+   */
+  def moveToFirstChild = parent match {
+    case Some(p) =>
+      
+      p.sgChildren = List(this) ::: p.sgChildren.filter(_!=this)
+    case other => 
+     
+  }
 
   def getParent[NT <: VUISGNode[BT, _]]: NT = parent.asInstanceOf[NT]
 
