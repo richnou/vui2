@@ -38,18 +38,18 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
       case None =>
         None
-        //throw new RuntimeException("Cannot place part: " + id + " because it hasn't been defined")
+      //throw new RuntimeException("Cannot place part: " + id + " because it hasn't been defined")
     }
   }
 
   def definePart(id: String)(cl: => HTMLNode[HTMLElement, _]) {
     placesMap = placesMap + (id -> { () => cl })
   }
-  
+
   // Sub View Placement
   //----------------------
-  def addView[T <: BasicHTMLView](v:T) = {
-    
+  def addView[T <: BasicHTMLView](v: T) = {
+
     val r = v.rerender
     r.detach
     add(r)
@@ -175,12 +175,18 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
    * Makes select with options based on tuples
    * (value -> Display Text)
    */
-  def selectOptions(options: List[(Any, Any)])(cl: => Any) = {
+  def selectOptions(optionsInput: List[(Any, Any)])(cl: => Any) = {
     select {
-      options.foreach {
-        case (v, t) => option(v.toString)(text(t.toString))
-      }
+
+      options(optionsInput)
+
       cl
+    }
+  }
+
+  def options(optionsInput: List[(Any, Any)]) = {
+    optionsInput.foreach {
+      case (v, t) => option(v.toString)(text(t.toString))
     }
   }
 
@@ -208,17 +214,24 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     +@("name" -> str)
   }
 
-  def fieldPlaceholder(text:String) = {
-     +@("placeHolder" -> text)
+  def fieldPlaceholder(text: String) = {
+    +@("placeHolder" -> text)
   }
-  
-  def fieldNameAndPlaceholder(name:String,text:String) = {
+
+  def fieldNameAndPlaceholder(name: String, text: String) = {
     fieldName(name)
     fieldPlaceholder(text)
-    
+
   }
-  
-  
+
+  def hiddenInput(name: String)(cl: => Any) = {
+    input {
+      +@("type" -> "hidden")
+      fieldName(name)
+      cl
+    }
+  }
+
   // Import XML Parsed Stuff
   //----------
   def importHTML(xml: Elem) = {
@@ -302,7 +315,7 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
       cl
     }
   }
-  
+
   def rth(cl: => Unit): Th[HTMLElement, Th[HTMLElement, _]] = {
     th("") {
       cl
@@ -355,6 +368,27 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   }
 
+  /**
+   * Same as trvalues but for header
+   */
+  def trhvalues(values: Any*): Tr[HTMLElement, Tr[HTMLElement, _]] = {
+
+    tr {
+      values.foreach {
+        case v: HTMLNode[_, _] =>
+          v.detach
+          switchToNode(v.asInstanceOf[HTMLNode[HTMLElement, _]], {})
+
+        case null =>
+        case v => th(v.toString()) {
+
+        }
+
+      }
+    }
+
+  }
+
   def tbodyTrLoop[V](objs: Iterable[V])(cl: V => Any) = {
     tbody {
       trLoop[V](objs)(cl)
@@ -365,6 +399,73 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
       tr {
         cl(v)
       }
+  }
+
+  /**
+   * Creates tbody, loop on objects, if the objects list is empty, add a text line spanning all columns
+   */
+  def tbodyTrLoopWithDefaultLine[V](default: String)(objs: Iterable[V])(cl: V => Any) = objs.size match {
+    case 0 =>
+      tbody {
+        trtd(default) {
+          +@("colspan" -> tableColumnsCount)
+        }
+      }
+    case other =>
+
+      tbodyTrLoop(objs) {
+        r => cl(r)
+      }
+  }
+
+  /**
+   * For now call inside table
+   */
+  def tableColumnsCount = {
+
+    // Look for table
+    val table = currentNode match {
+      case t: Table[HTMLElement, _] => Some(t)
+      case other                    => other.findParentOfType[Table[HTMLElement, _]]
+
+    }
+
+    // Search for actual Colspan required
+    val span = table match {
+      case Some(t) if (t.children.find(n => n.isInstanceOf[Thead[_, _]]).isDefined) =>
+
+        val thead = t.children.collectFirst { case tr: Thead[_, _] => tr }.get
+        thead.children.collectFirst { case tr: Tr[_, _] => tr } match {
+          case None =>
+            //val thead = t.children.collectFirst { case tr: Thead[_, _] => tr }
+            0
+
+          case Some(tr) =>
+            tr.children.collect { case td: Th[_, _] => td }.map {
+              case td if (td.hasAttribute("colspan")) => td.attribute("colspan").toInt
+              case td                                 => 1
+            }.sum
+        }
+      case Some(t) if (t.children.find(n => n.isInstanceOf[Tbody[_, _]]).isDefined) =>
+
+        val tbody = t.children.collectFirst { case tr: Tbody[_, _] => tr }.get
+        tbody.children.collectFirst { case tr: Tr[_, _] => tr } match {
+          case None =>
+            //val thead = t.children.collectFirst { case tr: Thead[_, _] => tr }
+            0
+
+          case Some(tr) =>
+            tr.children.collect { case td: Td[_, _] => td }.map {
+              case td if (td.hasAttribute("colspan")) => td.attribute("colspan").toInt
+              case td                                 => 1
+            }.sum
+        }
+
+      case other => 0
+    }
+
+    span
+
   }
 
   /**
@@ -379,14 +480,13 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
         val tbody = t.children.collectFirst { case tr: Tbody[_, _] => tr }.get
         tbody.children.collectFirst { case tr: Tr[_, _] => tr } match {
           case None =>
-              //val thead = t.children.collectFirst { case tr: Thead[_, _] => tr }
-              0
-            
-            
+            //val thead = t.children.collectFirst { case tr: Thead[_, _] => tr }
+            0
+
           case Some(tr) =>
             tr.children.collect { case td: Td[_, _] => td }.map {
               case td if (td.hasAttribute("colspan")) => td.attribute("colspan").toInt
-              case td => 1
+              case td                                 => 1
             }.sum
         }
 
@@ -418,6 +518,12 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     +@("colspan" -> v)
   }
 
+  // Styles
+  //-----------
+  def cssForceBlockDisplay = {
+    
+    ++@("style" -> "display:block;")
+  }
 }
 
 object DefaultBasicHTMLBuilder {
