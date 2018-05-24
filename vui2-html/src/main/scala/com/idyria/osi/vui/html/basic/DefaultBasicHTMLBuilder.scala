@@ -56,6 +56,16 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
     r
   }
 
+  // Structure
+  //---------------
+
+  /**
+   * Places a <meta charset="utf-8" />  tag
+   */
+  def utf8Meta = {
+    importHTML(<meta charset="utf-8"/>)
+  }
+
   // Content API
   //----------------
 
@@ -217,6 +227,24 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   def fieldPlaceholder(text: String) = {
     +@("placeHolder" -> text)
   }
+  
+  def fieldPlaceHolderOrValue(pl:String,v:Option[Any]) : Unit = {
+    v match {
+      case Some(v) => 
+        +@("value" -> v)
+      case None => 
+        fieldPlaceholder(pl)
+    }
+  }
+  
+  def fieldPlaceHolderOrValue[T](pl:String,source:Option[T],cl: T => Any) : Unit = {
+    source match {
+      case Some(v) => 
+        +@("value" -> cl(v))
+      case None => 
+        fieldPlaceholder(pl)
+    }
+  }
 
   def fieldNameAndPlaceholder(name: String, text: String) = {
     fieldName(name)
@@ -309,6 +337,24 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   // Table
   //-------------------
+
+ override def tr(cl: => Any) = {
+    currentNode match {
+      case tr: Tr[HTMLElement, Tr[HTMLElement, _]] =>
+
+        val rs = super.tr {
+          cl
+        }
+        rs.detach
+        currentNode.parent.get.addChild(rs)
+        rs
+
+      case other =>
+        super.tr {
+          cl
+        }
+    }
+  }
 
   def rtd(cl: => Unit): Td[HTMLElement, Td[HTMLElement, _]] = {
     td("") {
@@ -521,7 +567,7 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   // Styles
   //-----------
   def cssForceBlockDisplay = {
-    
+
     ++@("style" -> "display:block;")
   }
 }

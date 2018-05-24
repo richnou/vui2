@@ -292,6 +292,13 @@ class HTMLNode[HT <: org.w3c.dom.html.HTMLElement, +Self](var nodeName: String) 
     this
   }
   
+  def hasClass(name:String) = {
+    attributeOption("class") match {
+      case Some(classes) if (classes.toString().split(" ").find(_==name).isDefined) => true
+      case other => false
+    }
+  }
+  
   // Data
   //----------------
   def getDataOfType[T](str:String)(implicit dt:ClassTag[T]) = attributes.get("data-"+str) match {
