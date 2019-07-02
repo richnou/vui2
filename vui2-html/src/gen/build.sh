@@ -2,8 +2,8 @@
 
 thisloc=$(dirname "$(readlink -f ${BASH_SOURCE[0]})")
 
-source $thisloc/../../../src/odfi/load_odfi.sh
+source "$thisloc/../../../src/odfi/load_odfi.sh"
 
 
 ## Run Script
-odfi $thisloc/gen_html.tcl
+odfi "$thisloc/gen_html.tcl"
