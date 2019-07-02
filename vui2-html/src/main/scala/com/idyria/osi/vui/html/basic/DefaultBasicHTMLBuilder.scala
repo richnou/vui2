@@ -223,6 +223,10 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
   def fieldName(str: String) = {
     +@("name" -> str)
   }
+  def fieldNameId(str: String) = {
+    +@("name" -> str)
+    +@("id" -> str)
+  }
 
   def fieldPlaceholder(text: String) = {
     +@("placeHolder" -> text)
@@ -562,6 +566,9 @@ trait DefaultBasicHTMLBuilder extends BasicHTMLBuilderTrait[HTMLElement] {
 
   def colspan(v: Int) = {
     +@("colspan" -> v)
+  }
+  def rowspan(v: Int) = {
+    +@("rowspan" -> v)
   }
 
   // Styles
